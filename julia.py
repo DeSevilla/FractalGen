@@ -165,8 +165,8 @@ if __name__ == '__main__':
         arcmin = arccenter - arcrange / 2
         # param = np.full((frames,), complex(.5, -.5))
         param = np.asarray([0.8 * pow(math.e, complex(0, ((n * arcrange / frames + arcmin) / 360) * math.tau)) for n in range(frames)])
-        # julia = Julia(pixels, pixels, -size/2, size/2, -size/2, size/2, frames=frames)
-        julia = Julia(pixels, pixels, -0.2, 0.1, 0.35, 0.65, frames=frames)
+        julia = Julia(pixels, pixels, -size/2, size/2, -size/2, size/2, frames=frames)
+        # julia = Julia(pixels, pixels, -0.2, 0.1, 0.35, 0.65, frames=frames)
         julia.iterate(steps, log_interval=1, valmax=10, param=param)
         julia.show('diverged')
         julia.image(folder=folder)
