@@ -10,50 +10,68 @@ def relative(*args):
     return os.path.join(os.path.dirname(__file__), *args)
 
 class Julia:
-    def __init__(self, xpixels, ypixels, xmin=-1, xmax=1, ymin=-1, ymax=1, frames=1):
+    def __init__(self, xpixels, ypixels, xmin=-1, xmax=1, ymin=-1, ymax=1, zadd=None, zscale=None, frames=1):
         self.frames = frames
         self.xpixels = xpixels
         self.ypixels = ypixels
         x = np.linspace(xmin, xmax, xpixels)
         y = np.linspace(ymin, ymax, ypixels)
-        z = np.ones(self.frames)
-        zs, xs, ys = np.meshgrid(z, x, y, sparse=True, indexing='ij')
+        if zscale is None:
+            zscale = np.ones(self.frames)
+        zs, xs, ys = np.meshgrid(zscale, x, y, sparse=True, indexing='ij')
         self.array = zs * (xs + 1j * ys)
+        if zadd is not None:
+            self.array += zadd[:, np.newaxis, np.newaxis]
         self.array = self.array.astype(np.complex64, casting='same_kind', copy=False)
         self.iterations = np.zeros(self.array.shape, dtype=np.uint16)
         self.to_show = None
         self.steps = 0
         
-    def iterate(self, n=1, log_interval=-1, valmax=2, param=None):
-        if param is None:
-            param = np.full((self.array.shape[0],), complex(-0.835, -0.231))
-        elif np.abs(param).max() > 2:
-            print('Warning: parameter outside Mandelbrot set and will produce bad values')
-        self.steps += n
-        for k in range(self.steps):
+    def iterate(self, n=1, log_interval=-1, valmax=2, power=2, param=complex(-0.982, 0.191)):
+        arraypower = isinstance(power, np.ndarray)
+        arrayparam = isinstance(param, np.ndarray)
+        if arraypower:
+            power = np.broadcast_to(power[:, np.newaxis, np.newaxis], self.array.shape)
+        if arrayparam:
+            param = np.broadcast_to(param[:, np.newaxis, np.newaxis], self.array.shape)
+        if np.abs(param).max() > 2:
+            print('Warning: parameter will produce bad values')
+        usepow = power
+        usepar = param
+        for k in range(n):
             if log_interval > 0 and k % log_interval == 0:
                 print(f'{k}/{n}') 
             absarray = np.abs(self.array)
             undiverged = absarray < valmax
-            self.array[undiverged] *= self.array[undiverged]
-            self.array += param[:, np.newaxis, np.newaxis]
+            if arraypower:
+                usepow = power[undiverged]
+            if arrayparam:
+                usepar = param[undiverged]
+            self.array[undiverged] **= usepow
+            self.array[undiverged] += usepar
             self.iterations[undiverged] += 1
+            self.steps += 1
         undiverged = np.abs(self.array) < valmax
+        if self.xpixels > 100:
+            self.iterations[:, 0, 0] = 0
+            self.iterations[:, 0, 1] = self.steps
         self.to_show = self.iterations
 
-    def iterate_wrapping(self, n=1, log_interval=-1, valmax=1, param=None):
-        if param is None:
-            param = np.full((self.array.shape[0],), complex(-0.835, -0.231))
-        self.steps += n
-        for k in range(self.steps):
+    def iterate_wrapping(self, n=1, log_interval=-1, valmax=1, power=2, param=complex(-0.835, -0.231)):
+        if isinstance(power, np.ndarray):
+            power = power[:, np.newaxis, np.newaxis]
+        if isinstance(param, np.ndarray):
+            param = param[:, np.newaxis, np.newaxis]
+        for k in range(n):
             if log_interval > 0 and k % log_interval == 0: 
                 print(f'{k}/{n}') 
-            self.array = self.array ** 2
-            self.array += param[:, np.newaxis, np.newaxis]
+            self.array **= power
+            self.array += param
             absarray = np.abs(self.array)
             divergent = absarray > valmax
             self.array[divergent] = 0
             self.iterations[divergent] = k + 1
+            self.steps += 1
         self.iterations[self.iterations == 0] = self.steps
         self.to_show = self.array
 
@@ -79,6 +97,8 @@ class Julia:
         elif show_type == 'wtf':
             self.to_show = self.iterations
             self.to_show[self.iterations > self.steps] = 0
+        else:
+            print('Invalid display type')
 
     def image(self, folder=None, grayscale=False, colormap=None, animate=True, seconds=0):
         if colormap is None:
@@ -96,15 +116,16 @@ class Julia:
             else:
                 scaled = abs_array
             scaled = np.flip(scaled, axis=0)
-            if animate:
-                scaled[0][0] = 0
-                scaled[0][1] = 1
             if grayscale:
                 im = Image.fromarray(np.uint8(scaled * 255), 'L')
             else:
                 im = Image.fromarray(np.uint8(colormap(scaled) * 255), 'RGBA')
-            angle = f'{np.angle(param[k], deg=True) % 360:.02f}'.replace('.', '_')
-            filename = f'julia{k:04}_{angle}.png'
+            if isinstance(param, np.ndarray):
+                angle = np.angle(param[k], deg=True)
+            else:
+                angle = np.angle(param, deg=True)
+            angle_str = f'{angle % 360:.02f}'.replace('.', '_')
+            filename = f'julia{k:04}_{angle_str}.png'
             im.save(relative('output', folder, filename))
             print(f'saving at {filename}')
             if animate:
@@ -168,37 +189,62 @@ def test_iterate(julia, n=1, valmax=200, param=None):
         
 
 if __name__ == '__main__':
-    frames = 30
+    frames = 1
     start = datetime.now()
-    pixels = 1500
-    steps = 60
-    folder = None # relative('output', '2022-08-27 15.01.03 1500px 30s 30f')
+    folder = None  # relative('output', '20220827163008 2048px 60f 3w 200s 169a30r')
     if folder is None:
-        # def _colormap_red(x): return 0.75 * np.sin((x * 5 + .25) * np.pi) + 0.67
-        # def _colormap_green(x): return .75 * np.sin((x * 5 - 0.25) * np.pi) + 0.33
-        # def _colormap_blue(x): return -1.1 * np.sin((x * 5) * np.pi)
+        # def _colormap_red(x): return 0.75 * np.sin((x * 2 + .25) * np.pi) + 0.67
+        # def _colormap_green(x): return .75 * np.sin((x * 2 - 0.25) * np.pi) + 0.33
+        # def _colormap_blue(x): return -1.1 * np.sin((x * 2) * np.pi)
         # colormap_spec = {'red': _colormap_red, 'green': _colormap_green, 'blue': _colormap_blue}
         # colormap = colors.LinearSegmentedColormap('custom', colormap_spec)
         colormap = cm.inferno
-        # matplotlib predefined colormap - cm.viridis, cm.ocean, cm.plasma, cm.gist_earth, etc.
+        # matplotlib predefined colormaps are useful here - cm.viridis, cm.ocean, cm.plasma, cm.gist_earth, etc.
+        # my favorite is cm.inferno
+        # try cm.prism some time, it's ugly as sin
+        # the custom colormap is a prism variant (doesn't move as fast so it's somewhat less ugly) 
+
         # window parameters
+        pixels = 2048
         size = 3
-        center = (0, 0)
+        center = 0
+        # center = complex(0.195, 0.245)
+        zoom = None  # vector of how much to zoom in the window relative to start, per frame; smaller shrinks the window
+        shifting = None  # vector of how much to move the window relative to start per frame
+        # zoom = np.full(frames, 1 - 75/120)
+        # zoom = np.asarray([1-i/frames for i in range(frames)])  
+        # shifting = (1 - zoom) * center  # this keeps the zoom centered
+
+        # general simulation parameters
+        steps = 100
+        power = 2.2 # np.asarray([3 + i * 3 / frames for i in range(frames)])
 
         # complex parameter location (range is broken up into frames)
-        arccenter = 169
-        arcrange = 30
+        # arccenter = 169.81
+        arccenter = 132
+        arcrange = 0
         arcmin = arccenter - arcrange / 2
-
-        folder = relative('output', start.strftime('%Y%m%d%H%M%S') + f' {pixels}px {frames}f {size}w {steps}s {arccenter}a{arcrange}r')
-        os.makedirs(folder)
-        # param = np.full((frames,), complex(.5, -.5))
         param = np.asarray([0.8 * pow(np.e, complex(0, ((n * arcrange / frames + arcmin) / 360) * 2 * np.pi)) for n in range(frames)])
-        julia = Julia(pixels, pixels, -size/2 + center[0], size/2 + center[0], -size/2 + center[1], size/2 + center[1], frames=frames)
-        julia.iterate(steps, log_interval=1, valmax=10, param=param)
-        julia.show('diverged')
-        julia.image(folder=folder, colormap=colormap, animate=False, seconds=frames / 15)
+        # param = 0.8 * pow(np.e, complex(0, arcmin / 360) * 2 * np.pi)
+
+        folder = relative('output', start.strftime('%Y%m%d%H%M%S') + 
+                         f' {pixels}px {frames}f {size}w {steps}s {arccenter}a{arcrange}r')
+        os.makedirs(folder)
+        try:
+            julia = Julia(pixels, pixels, 
+                        -size/2 + center.real, size/2 + center.real, -size/2 + center.imag, size/2 + center.imag,
+                        zadd=shifting, zscale=zoom, 
+                        frames=frames)
+            # print(julia.array)
+            julia.iterate(steps, log_interval=1, valmax=10, power=power, param=param)
+            julia.show('iterations')
+            julia.image(folder=folder, colormap=colormap, animate=True, seconds=min(1, frames / 24))
+        except Exception as e:
+            print("Got exception:", e)
+            if len(os.listdir(folder)) == 0:
+                print("Deleting folder")
+                os.remove(folder)
     else:
-        gif_julia(folder=folder, seconds=frames / 24)
+        gif_julia(folder=folder, seconds=frames / 15)
     end = datetime.now()
     print(f'Done at {end}. Took {end - start}')
