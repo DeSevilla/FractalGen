@@ -189,7 +189,7 @@ def test_iterate(julia, n=1, valmax=200, param=None):
         
 
 if __name__ == '__main__':
-    frames = 1
+    frames = 12
     start = datetime.now()
     folder = None  # relative('output', '20220827163008 2048px 60f 3w 200s 169a30r')
     if folder is None:
@@ -205,7 +205,7 @@ if __name__ == '__main__':
         # the custom colormap is a prism variant (doesn't move as fast so it's somewhat less ugly) 
 
         # window parameters
-        pixels = 2048
+        pixels = 1024
         size = 3
         center = 0
         # center = complex(0.195, 0.245)
@@ -217,12 +217,12 @@ if __name__ == '__main__':
 
         # general simulation parameters
         steps = 100
-        power = 2.2 # np.asarray([3 + i * 3 / frames for i in range(frames)])
+        power = 2 # np.asarray([3 + i * 3 / frames for i in range(frames)])
 
         # complex parameter location (range is broken up into frames)
         # arccenter = 169.81
-        arccenter = 132
-        arcrange = 0
+        arccenter = 169.81
+        arcrange = 30
         arcmin = arccenter - arcrange / 2
         param = np.asarray([0.8 * pow(np.e, complex(0, ((n * arcrange / frames + arcmin) / 360) * 2 * np.pi)) for n in range(frames)])
         # param = 0.8 * pow(np.e, complex(0, arcmin / 360) * 2 * np.pi)
