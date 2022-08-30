@@ -69,6 +69,15 @@ else:
     shift_start = 0
     shift_end = complex(5, 5)
 
+# the step equation for any point is x^p + c. this sets p
+power = None  # placeholder
+fixed_power = True
+if fixed_power:
+    power = 2  # power 
+else:
+    power_start = 1
+    power_end = 5
+
 # the step equation for any point is x^p + c. this sets c
 param = None  # placeholder
 fixed_param = True
@@ -83,16 +92,6 @@ else:
     param_degrees_range = 360
     param_degrees_start = param_degrees_center - param_degrees_range / 2
     param_degrees_end = param_degrees_center + param_degrees_range / 2
-
-# the step equation for any point is x^p + c. this sets p
-power = None  # placeholder
-fixed_power = True
-if fixed_power:
-    power = 2  # power 
-else:
-    power_start = 1
-    power_end = 5
-
 
 start = datetime.now()
 if folder is None:
@@ -112,7 +111,8 @@ if folder is None:
         folder_steps = steps
     else:
         steps_range = steps_end - steps_start
-        steps = np.asarray([int(steps_range * (i + 1) / frames) + steps_start for i in range(frames)])
+        steps = np.linspace(steps_start, steps_end, frames)
+        # steps = np.asarray([int(steps_range * (i + 1) / frames) + steps_start for i in range(frames)])
         folder_steps = steps.max()
 
     if zscale is None:
