@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime
 import numpy as np
 from julia import Julia, gif_julia, relative
@@ -10,13 +11,12 @@ if __name__ == '__main__':
     start = datetime.now()
     folder = None  # relative('output', '20220827163008 2048px 60f 3w 200s 169a30r')
     if folder is None:
-        # def _colormap_red(x): return 0.75 * np.sin((x * 2 + .25) * np.pi) + 0.67
-        # def _colormap_green(x): return .75 * np.sin((x * 2 - 0.25) * np.pi) + 0.33
-        # def _colormap_blue(x): return -1.1 * np.sin((x * 2) * np.pi)
-        def _colormap_red(x): return x
-        def _colormap_green(x): return 0
-        def _colormap_blue(x): return 0
-        colormap_spec = {'red': _colormap_red, 'green': _colormap_green, 'blue': _colormap_blue}
+        def _colormap_red(x): return 0.75 * np.sin((x * 5 + .25) * np.pi) + 0.67
+        def _colormap_green(x): return 0 # .55 * np.sin((x * 17 - 0.25) * np.pi) + 0.33
+        def _colormap_blue(x): return 0 # -1.1 * np.sin((x * 5) * np.pi)
+        # def _colormap_green(x): return 0
+        # def _colormap_blue(x): return 0
+        colormap_spec = {'red': [(0,0,0), (0.25,0,0.5),(0.75,1,1), (1,1,1)], 'green': _colormap_green, 'blue': _colormap_blue}
         colormap = colors.LinearSegmentedColormap('custom', colormap_spec)
         # colormap = cm.inferno
         # matplotlib predefined colormaps are useful here - cm.viridis, cm.ocean, cm.plasma, cm.gist_earth, etc.
@@ -28,10 +28,9 @@ if __name__ == '__main__':
         pixels = 1024
         size = 3
         center = 0
-        center = complex(0.195, 0.245)
-        zoom = None  # vector of how much to zoom in the window relative to start, per frame; smaller shrinks the window
-        shifting = None  # vector of how much to move the window relative to start per frame
-        zoom = np.full(frames, 1 - 75/120)
+        # center = complex(0.195, 0.245)
+        zoom = np.full(frames, 1)  # vector of how much to zoom in the window relative to start, per frame; smaller shrinks the window
+        # zoom = np.full(frames, 1 - 75/120)
         # zoom = np.asarray([1-i/frames for i in range(frames)])  
         shifting = (1 - zoom) * center  # this keeps the zoom centered
 
@@ -42,7 +41,7 @@ if __name__ == '__main__':
         # complex parameter location (range is broken up into frames)
         # arccenter = 169.81
         arccenter = 162.5
-        arcrange = 20
+        arcrange = 0
         arcmin = arccenter - arcrange / 2
         param = np.asarray([0.8 * pow(np.e, complex(0, ((n * arcrange / frames + arcmin) / 360) * 2 * np.pi)) for n in range(frames)])
         # param = 0.8 * pow(np.e, complex(0, arcmin / 360) * 2 * np.pi)
@@ -64,7 +63,7 @@ if __name__ == '__main__':
             print("Got exception:", e)
             if len(os.listdir(folder)) == 0:
                 print("Deleting folder")
-                os.remove(folder)
+                shutil.rmtree(folder)
     else:
         gif_julia(folder=folder, seconds=frames / 15)
     end = datetime.now()
