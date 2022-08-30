@@ -1,6 +1,6 @@
 from datetime import datetime
 import numpy as np
-from PIL import Image
+from PIL import Image, ImagePalette
 from matplotlib import cm, colors
 import os
 
@@ -10,7 +10,8 @@ def relative(*args):
     return os.path.join(os.path.dirname(__file__), *args)
 
 class Julia:
-    def __init__(self, xpixels, ypixels, xmin=-1, xmax=1, ymin=-1, ymax=1, zadd=None, zscale=None, frames=1):
+    def __init__(self, xpixels, ypixels, xmin=-1, xmax=1, ymin=-1, ymax=1, zadd=None, zscale=None, frames=1,
+                 power=2, param=complex(-0.982, 0.21), valmax=2):
         self.frames = frames
         self.xpixels = xpixels
         self.ypixels = ypixels
@@ -26,49 +27,51 @@ class Julia:
         self.iterations = np.zeros(self.array.shape, dtype=np.uint16)
         self.to_show = None
         self.steps = 0
-        
-    def iterate(self, n=1, log_interval=-1, valmax=2, power=2, param=complex(-0.982, 0.191)):
-        arraypower = isinstance(power, np.ndarray)
-        arrayparam = isinstance(param, np.ndarray)
-        if arraypower:
-            power = np.broadcast_to(power[:, np.newaxis, np.newaxis], self.array.shape)
-        if arrayparam:
-            param = np.broadcast_to(param[:, np.newaxis, np.newaxis], self.array.shape)
+        self.arraypower = isinstance(power, np.ndarray)
+        self.arrayparam = isinstance(param, np.ndarray)
+        if self.arraypower:
+            self.power = np.broadcast_to(power[:, np.newaxis, np.newaxis], self.array.shape)
+        else:
+            self.power = power
+        if self.arrayparam:
+            self.param = np.broadcast_to(param[:, np.newaxis, np.newaxis], self.array.shape)
+        else:
+            self.param = param
         if np.abs(param).max() > 2:
             print('Warning: parameter will produce bad values')
-        usepow = power
-        usepar = param
+        self.valmax = valmax
+
+        
+    def iterate(self, n=1, log_interval=-1):
+        usepow = self.power
+        usepar = self.param
         for k in range(n):
             if log_interval > 0 and k % log_interval == 0:
                 print(f'{k}/{n}') 
             absarray = np.abs(self.array)
-            undiverged = absarray < valmax
-            if arraypower:
-                usepow = power[undiverged]
-            if arrayparam:
-                usepar = param[undiverged]
+            undiverged = absarray < self.valmax
+            if self.arraypower:
+                usepow = self.power[undiverged]
+            if self.arrayparam:
+                usepar = self.param[undiverged]
             self.array[undiverged] **= usepow
             self.array[undiverged] += usepar
             self.iterations[undiverged] += 1
             self.steps += 1
-        undiverged = np.abs(self.array) < valmax
+        undiverged = np.abs(self.array) < self.valmax
         if self.xpixels > 100:
             self.iterations[:, 0, 0] = 0
             self.iterations[:, 0, 1] = self.steps
         self.to_show = self.iterations
 
-    def iterate_wrapping(self, n=1, log_interval=-1, valmax=1, power=2, param=complex(-0.835, -0.231)):
-        if isinstance(power, np.ndarray):
-            power = power[:, np.newaxis, np.newaxis]
-        if isinstance(param, np.ndarray):
-            param = param[:, np.newaxis, np.newaxis]
+    def iterate_wrapping(self, n=1, log_interval=-1):
         for k in range(n):
             if log_interval > 0 and k % log_interval == 0: 
                 print(f'{k}/{n}') 
-            self.array **= power
-            self.array += param
+            self.array **= self.power
+            self.array += self.param
             absarray = np.abs(self.array)
-            divergent = absarray > valmax
+            divergent = absarray > self.valmax
             self.array[divergent] = 0
             self.iterations[divergent] = k + 1
             self.steps += 1
@@ -120,10 +123,10 @@ class Julia:
                 im = Image.fromarray(np.uint8(scaled * 255), 'L')
             else:
                 im = Image.fromarray(np.uint8(colormap(scaled) * 255), 'RGBA')
-            if isinstance(param, np.ndarray):
-                angle = np.angle(param[k], deg=True)
+            if self.arrayparam:
+                angle = np.angle(self.param[k][0][0], deg=True)
             else:
-                angle = np.angle(param, deg=True)
+                angle = np.angle(self.param, deg=True)
             angle_str = f'{angle % 360:.02f}'.replace('.', '_')
             filename = f'julia{k:04}_{angle_str}.png'
             im.save(relative('output', folder, filename))
@@ -146,7 +149,7 @@ def save_gif(images, path, seconds=0):
         #     palette = im.getpalette()
         #     images[i] = im
         # else:
-        images[i] = images[i].convert('P', palette=Image.Palette.ADAPTIVE)
+        images[i] = images[i].convert('P', palette=Image.ADAPTIVE)
     if seconds == 0:
         duration = 50
     else:
@@ -160,33 +163,7 @@ def gif_julia(folder, seconds=0):
         im = Image.open(relative('output', folder, fn))
         images.append(im.convert('P', palette=Image.Palette.ADAPTIVE)) 
     save_gif(images, relative('output', folder, f'julia_animated.gif'), seconds=seconds)
-
-
-def test_iterate(julia, n=1, valmax=200, param=None):
-    if param is None:
-        param = np.full((julia.array.shape[0],), complex(-0.835, -0.231))
-    array2 = np.copy(julia.array)
-    iterations2 = np.copy(julia.iterations)
-    julia.iterate(n=n, valmax=valmax, param=param) 
-    shape = array2.shape
-    julia.steps = n
-    for step in range(julia.steps):
-        for i in range(shape[0]):
-            for j in range(shape[1]):
-                if j % 100 == 0:
-                    print(f'on row {j} of {shape[1]}')
-                for k in range(shape[2]):
-                    if abs(array2[i][j][k]) < valmax:
-                        array2[i][j][k] = array2[i][j][k] * array2[i][j][k]
-                        iterations2[i][j][k] += 1
-                    array2[i][j][k] += param[i]
-    print(julia.iterations.max(), julia.iterations.min(), iterations2.max(), iterations2.min())
-    print(julia.array.max(), julia.array.min(), array2.max(), array2.min())
-    print(np.array_equal(julia.iterations, iterations2))
-    print(np.array_equal(julia.array, array2))
-    julia.to_show = julia.array - array2
-
-        
+       
 
 if __name__ == '__main__':
     frames = 12
@@ -234,9 +211,10 @@ if __name__ == '__main__':
             julia = Julia(pixels, pixels, 
                         -size/2 + center.real, size/2 + center.real, -size/2 + center.imag, size/2 + center.imag,
                         zadd=shifting, zscale=zoom, 
+                        valmax=10, power=power, param=param,
                         frames=frames)
             # print(julia.array)
-            julia.iterate(steps, log_interval=1, valmax=10, power=power, param=param)
+            julia.iterate(steps, log_interval=1)
             julia.show('iterations')
             julia.image(folder=folder, colormap=colormap, animate=True, seconds=min(1, frames / 24))
         except Exception as e:
