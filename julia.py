@@ -145,7 +145,7 @@ def save_gif(images, path, seconds=0):
     # palette = None
     for i in range(len(images)):
         # if palette is None:
-        #     im = images[i].convert('P', palette=Image.Palette.ADAPTIVE)
+        #     im = images[i].convert('P', palette=Image.ADAPTIVE)
         #     palette = im.getpalette()
         #     images[i] = im
         # else:
@@ -161,7 +161,7 @@ def gif_julia(folder, seconds=0):
     pngs = sorted(filter(lambda fn: os.path.splitext(fn)[1] == '.png', os.listdir(folder)))
     for fn in pngs:
         im = Image.open(relative('output', folder, fn))
-        images.append(im.convert('P', palette=Image.Palette.ADAPTIVE)) 
+        images.append(im.convert('P', palette=Image.ADAPTIVE)) 
     save_gif(images, relative('output', folder, f'julia_animated.gif'), seconds=seconds)
        
 

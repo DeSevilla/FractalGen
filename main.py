@@ -6,16 +6,19 @@ from matplotlib import cm, colors
         
 
 if __name__ == '__main__':
-    frames = 120
+    frames = 1
     start = datetime.now()
     folder = None  # relative('output', '20220827163008 2048px 60f 3w 200s 169a30r')
     if folder is None:
         # def _colormap_red(x): return 0.75 * np.sin((x * 2 + .25) * np.pi) + 0.67
         # def _colormap_green(x): return .75 * np.sin((x * 2 - 0.25) * np.pi) + 0.33
         # def _colormap_blue(x): return -1.1 * np.sin((x * 2) * np.pi)
-        # colormap_spec = {'red': _colormap_red, 'green': _colormap_green, 'blue': _colormap_blue}
-        # colormap = colors.LinearSegmentedColormap('custom', colormap_spec)
-        colormap = cm.inferno
+        def _colormap_red(x): return x
+        def _colormap_green(x): return 0
+        def _colormap_blue(x): return 0
+        colormap_spec = {'red': _colormap_red, 'green': _colormap_green, 'blue': _colormap_blue}
+        colormap = colors.LinearSegmentedColormap('custom', colormap_spec)
+        # colormap = cm.inferno
         # matplotlib predefined colormaps are useful here - cm.viridis, cm.ocean, cm.plasma, cm.gist_earth, etc.
         # my favorite is cm.inferno
         # try cm.prism some time, it's ugly as sin
