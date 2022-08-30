@@ -21,6 +21,14 @@ frames = 100  # how many frames to generate
 seconds = min(1, frames / 24)
 colormap = cm.inferno  # how to color the display. try cm.inferno, cm.viridis, cm.cool, cm.prism, and more!
 # See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info
+color_by_options = [
+    'iterations', # color each point by how many iterations it lasted without diverging
+    'diverged',   # how many iterations it took to diverge, or 0 if it didn't diverge
+    'array',      # absolute value of each point (this will be the maximum value for any divergent point)
+    'undiverged', # absolute value of each undivergent point, or 0 for any divergent point
+    'nested'      # how many iterations it took to diverge, or absolute value if it didn't diverge
+]
+color_by = 'iterations'
 
 
 ##############################################################
@@ -145,7 +153,7 @@ if folder is None:
                     valmax=point_value_max, power=power, param=param)
         # print(julia.array)
         julia.iterate(steps, log_interval=1)
-        julia.show('iterations', normalize_frame_depths=False)
+        julia.show(color_by, normalize_frame_depths=False)
         julia.image(folder=folder, colormap=colormap, animate=True, seconds=seconds)
     except Exception as e:
         print("Got exception:", e)

@@ -16,6 +16,12 @@ High-level parameters:
   * frames: how many frames to generate
   * seconds: how long the animation should be
   * colormap: MatPlotLib colormap that defines how to color the display. See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info. I like cm.inferno, cm.viridis, and cm.plasma; cm.prism is amusingly ugly.
+  * color_by: String defining what data should be fed into the colormap.
+    * iterations: color each point by how many iterations it lasted without diverging
+    * diverged: how many iterations it took to diverge, or 0 if it didn't diverge
+    * array: absolute value of each point (this will be the maximum value for any divergent point)
+    * undiverged: absolute value of each undivergent point, or 0 for any divergent point
+    * nested: how many iterations it took to diverge, or absolute value if it didn't diverge
 
 * Fixed simulation parameters
   * size: size of the viewing window in the complex plane
