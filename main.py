@@ -17,8 +17,8 @@ folder = None  # an existing folder containing .pngs
 # Display parameters
 ##############################################################
 pixels = 1024  # pixel dimension of image. image will always be square
-frames = 100  # how many frames to generate
-seconds = min(1, frames / 24)
+frames = 10  # how many frames to generate
+seconds = min(1, frames / 24)  # how many seconds the animation should last
 colormap = cm.inferno  # how to color the display. try cm.inferno, cm.viridis, cm.cool, cm.prism, and more!
 # See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info
 color_by_options = [
@@ -47,7 +47,7 @@ point_value_max = 10  # maximum absolute value at any point
 
 # how many steps to run for
 steps = None  # placeholder value before it's set
-fixed_steps = True
+fixed_steps = False
 if fixed_steps:
     steps = 100
 else:
@@ -59,7 +59,7 @@ else:
 # the zoom of the window
 # works by multiplying the size
 zscale = None  # placeholder
-fixed_zoom = True
+fixed_zoom = False
 if fixed_zoom:
     zoom = 1  # smaller values of this mean zooming out; larger values mean zooming in. avoid 0
 else:
@@ -70,7 +70,7 @@ else:
 # how much the window should be shifted, as a complex number
 # works by adding to the center
 shifting = None  # placeholder
-fixed_shift = True
+fixed_shift = False
 if fixed_shift:
     shifting = 0
 else:
@@ -79,7 +79,7 @@ else:
 
 # the step equation for any point is x^p + c. this sets p
 power = None  # placeholder
-fixed_power = True
+fixed_power = False
 if fixed_power:
     power = 2  # power 
 else:
@@ -88,7 +88,7 @@ else:
 
 # the step equation for any point is x^p + c. this sets c
 param = None  # placeholder
-fixed_param = True
+fixed_param = False
 if fixed_param:
     # you can also just set param equal to any complex number here
     param_radius = 0.8
@@ -119,8 +119,8 @@ if folder is None:
         folder_steps = steps
     else:
         steps_range = steps_end - steps_start
-        steps = np.linspace(steps_start, steps_end, frames)
-        # steps = np.asarray([int(steps_range * (i + 1) / frames) + steps_start for i in range(frames)])
+        # steps = np.linspace(steps_start, steps_end, frames)
+        steps = np.asarray([int(steps_range * (i + 1) / frames) + steps_start for i in range(frames)])
         folder_steps = steps.max()
 
     if zscale is None:
@@ -132,7 +132,13 @@ if folder is None:
     if shifting is None:
         if not fixed_shift:
             shifting = np.linspace(shift_start, shift_end, frames)
-    shifting = shifting + (1 - zoom) * center  # this keeps the zoom centered
+    shifting = shifting + (1 - zscale) * center  # this keeps the zoom centered
+
+    if power is None:
+        if not fixed_param:
+            power = np.linspace(power_start, power_end, frames)
+        else:
+            print('Power undefined???')
 
     if param is None:
         if fixed_param:
@@ -148,7 +154,7 @@ if folder is None:
     try:
         julia = Julia(pixels, pixels, 
                     -size/2 + center.real, size/2 + center.real, -size/2 + center.imag, size/2 + center.imag,
-                    zadd=shifting, zscale=zoom, 
+                    zadd=shifting, zscale=zscale, 
                     frames=frames, 
                     valmax=point_value_max, power=power, param=param)
         # print(julia.array)
@@ -160,6 +166,7 @@ if folder is None:
         if len(os.listdir(folder)) == 0:
             print("Deleting folder")
             shutil.rmtree(folder)
+        raise e
 else:
     gif_julia(folder=folder, seconds=seconds)
 end = datetime.now()
