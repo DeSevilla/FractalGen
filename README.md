@@ -1,5 +1,7 @@
 A numpy-based Julia set image generator, with support for single images or animations.
 
+![spiraling tiled fractal](./best/julia0031_169_50)
+
 main.py contains the script which will actually run it. It begins with an explanation of all the parameters,
 and should be modified to change the results. Maybe someday this will have a CLI.
 
