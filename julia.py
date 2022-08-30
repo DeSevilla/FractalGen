@@ -26,7 +26,7 @@ class Julia:
         self.array = self.array.astype(np.complex64, casting='same_kind', copy=False)
         self.iterations = np.zeros(self.array.shape, dtype=np.uint16)
         self.to_show = None
-        self.steps = 0
+        self.total_steps = 0
         self.arraypower = isinstance(power, np.ndarray)
         self.arrayparam = isinstance(param, np.ndarray)
         if self.arraypower:
@@ -42,27 +42,32 @@ class Julia:
         self.valmax = valmax
 
         
-    def iterate(self, n=1, log_interval=-1):
+    def iterate(self, steps=1, log_interval=-1):
+        if isinstance(steps, np.ndarray):
+            arraysteps = True
+            n = steps.max()
+            steps = np.broadcast_to(steps[:, np.newaxis, np.newaxis], self.array.shape)
+        else:
+            arraysteps = False
+            n = steps
         usepow = self.power
         usepar = self.param
         for k in range(n):
             if log_interval > 0 and k % log_interval == 0:
                 print(f'{k}/{n}') 
             absarray = np.abs(self.array)
-            undiverged = absarray < self.valmax
+            to_update = absarray < self.valmax
+            if arraysteps:
+                to_update = np.logical_and(to_update, steps > k)
             if self.arraypower:
-                usepow = self.power[undiverged]
+                usepow = self.power[to_update]
             if self.arrayparam:
-                usepar = self.param[undiverged]
-            self.array[undiverged] **= usepow
-            self.array[undiverged] += usepar
-            self.iterations[undiverged] += 1
-            self.steps += 1
-        undiverged = np.abs(self.array) < self.valmax
-        if self.xpixels > 100:
-            self.iterations[:, 0, 0] = 0
-            self.iterations[:, 0, 1] = self.steps
-        self.to_show = self.iterations
+                usepar = self.param[to_update]
+            self.array[to_update] **= usepow
+            self.array[to_update] += usepar
+            self.iterations[to_update] += 1
+            self.total_steps += 1
+            self.to_show = self.iterations
 
     def iterate_wrapping(self, n=1, log_interval=-1):
         for k in range(n):
@@ -74,32 +79,37 @@ class Julia:
             divergent = absarray > self.valmax
             self.array[divergent] = 0
             self.iterations[divergent] = k + 1
-            self.steps += 1
-        self.iterations[self.iterations == 0] = self.steps
+            self.total_steps += 1
+        self.iterations[self.iterations == 0] = self.total_steps
         self.to_show = self.array
 
-    def show(self, show_type='iter'):
+    def show(self, show_type='iterations', normalize_frame_depths=True):
+        if normalize_frame_depths:
+            self.iterations[:, 0, 0] = 0
+            self.iterations[:, 0, 1] = self.total_steps
+            self.array[:, 0, 0] = 0
+            self.array[:, 0, 1] = np.abs(self.array).max()
         if show_type == 'iterations':
             self.to_show = self.iterations
         elif show_type == 'array':
             self.to_show = self.array
         elif show_type == 'undiverged':
-            undiverged = self.iterations == self.steps
+            undiverged = self.iterations == self.total_steps
             absvals = np.abs(self.array[undiverged]) / np.abs(self.array[undiverged].max()) * self.iterations.max()
             self.to_show = np.zeros(self.array.shape)
             self.to_show[undiverged] = absvals
         elif show_type == 'nested':
             self.to_show = self.iterations
-            undiverged = self.iterations == self.steps
+            undiverged = self.iterations == self.total_steps
             absvals = np.abs(self.array[undiverged]) / np.abs(self.array[undiverged].max()) * self.iterations.max()
             print(absvals.min(), absvals.max())
             self.to_show[undiverged] = absvals
         elif show_type == 'diverged':
             self.to_show = self.iterations
-            self.to_show[self.iterations == self.steps] = 0
+            self.to_show[self.iterations == self.total_steps] = 0
         elif show_type == 'wtf':
             self.to_show = self.iterations
-            self.to_show[self.iterations > self.steps] = 0
+            self.to_show[self.iterations > self.total_steps] = 0
         else:
             print('Invalid display type')
 
