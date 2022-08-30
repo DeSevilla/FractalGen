@@ -35,9 +35,10 @@ High-level parameters:
     * power_start: power at the first frame
     * power_end: power at the last frame
   * param: sets `c` in the step equation `x^p + c`. can be set directly, or by radius and degrees. will trace a circle around the origin if not fixed
-    * param_radius: distance of param from origin. available both in fixed and variable modes
-    * param_degrees: degrees of param relative to the positive real numbers. fixed mode only
-    * param_degrees_center: optional way to set param_degrees_start and param_degrees_end. chooses the center point of the arc traced by param. requires param_degrees_range. variable mode only
-    * param_degrees_range: optional way to set param_degrees_start and param_degrees_end. sets the range of the arc traced by param. requires param_degrees_center. variable mode only
-    * param_degrees_start: degrees of param at first frame
-    * param_degrees_end: degrees of param at last frame
+    * param_radius: distance of param from origin. Available both in fixed and variable modes
+    * param_degrees: degrees of param relative to the positive real numbers. Fixed mode only
+    * param_degrees_center: optional way to set param_degrees_start and param_degrees_end. 
+      Chooses the center point of the arc traced by param. requires param_degrees_range. Variable mode only
+    * param_degrees_range: optional way to set param_degrees_start and param_degrees_end. Sets the range of the arc traced by param. requires param_degrees_center. Variable mode only
+    * param_degrees_start: degrees of param at first frame. Variable mode only
+    * param_degrees_end: degrees of param at last frame. Variable mode only
