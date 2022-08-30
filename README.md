@@ -24,6 +24,9 @@ High-level parameters:
     * array: absolute value of each point (this will be the maximum value for any divergent point)
     * undiverged: absolute value of each undivergent point, or 0 for any divergent point
     * nested: how many iterations it took to diverge, or absolute value if it didn't diverge
+  * normalize_frame_colors: Try to maintain consistent colors for specific data values between frames.
+    If the number of steps varies between frames and you are displaying iterations, 
+    having this as True will show undiverged points differently between different frames.
 
 * Fixed simulation parameters
   * size: size of the viewing window in the complex plane
@@ -40,7 +43,6 @@ High-level parameters:
   * shift: how much the window should be shifted, as a complex number to be added to the center
     * shift_start: shift at the first frame
     * shift_end: shift at the last frame
-    
   * power: sets `p` in the step equation `x^p + c`
     * power_start: power at the first frame
     * power_end: power at the last frame

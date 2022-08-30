@@ -29,7 +29,9 @@ color_by_options = [
     'nested'      # how many iterations it took to diverge, or absolute value if it didn't diverge
 ]
 color_by = 'iterations'
-
+normalize_frame_colors = True  # try to maintain consistent colors for specific data values between frames
+# If the number of steps varies between frames and you are displaying iterations, 
+# having this as True will show undiverged points differently between different frames.
 
 ##############################################################
 # Fixed simulation parameters
@@ -47,19 +49,17 @@ point_value_max = 10  # maximum absolute value at any point
 
 # how many steps to run for
 steps = None  # placeholder value before it's set
-fixed_steps = False
+fixed_steps = True
 if fixed_steps:
     steps = 100
 else:
     steps_start = 10
     steps_end = 100
 
-
-
 # the zoom of the window
 # works by multiplying the size
 zscale = None  # placeholder
-fixed_zoom = False
+fixed_zoom = True
 if fixed_zoom:
     zoom = 1  # smaller values of this mean zooming out; larger values mean zooming in. avoid 0
 else:
@@ -70,16 +70,16 @@ else:
 # how much the window should be shifted, as a complex number
 # works by adding to the center
 shifting = None  # placeholder
-fixed_shift = False
+fixed_shift = True
 if fixed_shift:
     shifting = 0
 else:
     shift_start = 0
-    shift_end = complex(5, 5)
+    shift_end = complex(2, 2)
 
 # the step equation for any point is x^p + c. this sets p
 power = None  # placeholder
-fixed_power = False
+fixed_power = True
 if fixed_power:
     power = 2  # power 
 else:
@@ -88,7 +88,7 @@ else:
 
 # the step equation for any point is x^p + c. this sets c
 param = None  # placeholder
-fixed_param = False
+fixed_param = True
 if fixed_param:
     # you can also just set param equal to any complex number here
     param_radius = 0.8
@@ -140,16 +140,18 @@ if folder is None:
         else:
             print('Power undefined???')
 
-    if param is None:
-        if fixed_param:
+    if fixed_param:
+        if param is None:
             param = param_radius * pow(np.e, complex(0, (param_degrees / 360) * 2 * np.pi))
-        else:
-            arcrange = param_degrees_end - param_degrees_start
-            param = np.asarray([param_radius * pow(np.e, complex(0, ((n * arcrange / frames + param_degrees_start) / 360) * 2 * np.pi)) 
-                                for n in range(frames)])
+        folder_param = f'{np.abs(param):.3f}r{np.angle(param, deg=True):.02f}d'
+    else:
+        arcrange = param_degrees_end - param_degrees_start
+        param = np.asarray([param_radius * pow(np.e, complex(0, ((n * arcrange / frames + param_degrees_start) / 360) * 2 * np.pi)) 
+                            for n in range(frames)])
+        folder_param = f'{param_radius:.3f}r{param_degrees_start:.02f}-{param_degrees_end:.02f}d'
 
     folder = relative('output', start.strftime('%Y%m%d%H%M%S') + 
-                        f' {pixels}px {frames}f {size}w {folder_steps}s {param_degrees_start}-{param_degrees_end}r')
+                        f' {pixels}px {frames}f {size}w {folder_steps}s {folder_param}p')
     os.makedirs(folder)
     try:
         julia = Julia(pixels, pixels, 
@@ -159,7 +161,7 @@ if folder is None:
                     valmax=point_value_max, power=power, param=param)
         # print(julia.array)
         julia.iterate(steps, log_interval=1)
-        julia.show(color_by, normalize_frame_depths=False)
+        julia.show(color_by, normalize_frame_depths=normalize_frame_colors)
         julia.image(folder=folder, colormap=colormap, animate=True, seconds=seconds)
     except Exception as e:
         print("Got exception:", e)
