@@ -12,7 +12,7 @@ High-level parameters:
 * Display parameters
   * pixels: pixel dimension of image. image will always be square
   * frames: how many frames to generate
-  * seconds = min(1, frames / 24)
+  * seconds: how long the animation should be
   * colormap: how to color the display. try cm.inferno, cm.viridis, cm.cool, cm.prism, and more! See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info
 
 * Fixed simulation parameters
