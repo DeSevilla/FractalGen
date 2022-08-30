@@ -2,8 +2,10 @@ A numpy-based [Julia set](https://en.wikipedia.org/wiki/Julia_set) image generat
 
 ![spiraling tiled fractal](./examples/julia0031_169_50.png)
 
-main.py contains the script which will actually run it. It begins with an explanation of all the parameters,
-and should be modified to change the results. Maybe someday this will have a CLI.
+main.py contains the script which will actually run it. It begins with the high-level parameters,
+and should be modified to change the results. It then processes the high-level parameters into low-level
+parameters which are used to run the mathematics behind the Julia set. These low-level parameters
+can be directly edited if you want behaviors more complex than the defaults on the high-level parameters.
 
 High-level parameters:
 
