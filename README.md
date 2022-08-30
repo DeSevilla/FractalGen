@@ -1,4 +1,4 @@
-A numpy-based Julia set image generator, with support for single images or animations.
+A numpy-based [Julia set](https://en.wikipedia.org/wiki/Julia_set) image generator, with support for single images or animations.
 
 ![spiraling tiled fractal](./examples/julia0031_169_50.png)
 
