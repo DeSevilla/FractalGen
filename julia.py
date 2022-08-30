@@ -1,6 +1,6 @@
 from datetime import datetime
 import numpy as np
-from PIL import Image, ImagePalette
+from PIL import Image
 from matplotlib import cm, colors
 import os
 
@@ -150,20 +150,14 @@ class Julia:
             else:
                 print('Cannot animate as there is only one frame')
 
-def save_gif(images, path, seconds=0):
+def save_gif(images, path, seconds=-1):
     print('Saving at', path)
-    # palette = None
     for i in range(len(images)):
-        # if palette is None:
-        #     im = images[i].convert('P', palette=Image.ADAPTIVE)
-        #     palette = im.getpalette()
-        #     images[i] = im
-        # else:
         images[i] = images[i].convert('P', palette=Image.ADAPTIVE)
-    if seconds == 0:
-        duration = 50
-    else:
+    if seconds > 0:
         duration = seconds * 1000 / len(images)
+    else:
+        duration = 50
     images[0].save(path, save_all=True, append_images=images[1:], duration=duration, loop=0, disposal=2)
 
 def gif_julia(folder, seconds=0):
