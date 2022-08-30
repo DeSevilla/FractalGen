@@ -13,7 +13,7 @@ High-level parameters:
   * pixels: pixel dimension of image. image will always be square
   * frames: how many frames to generate
   * seconds: how long the animation should be
-  * colormap: how to color the display. try cm.inferno, cm.viridis, cm.cool, cm.prism, and more! See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info
+  * colormap: MatPlotLib colormap that defines how to color the display. See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info. I like cm.inferno, cm.viridis, and cm.plasma; cm.prism is amusingly ugly.
 
 * Fixed simulation parameters
   * size: size of the viewing window in the complex plane
