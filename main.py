@@ -2,23 +2,31 @@ import os
 import shutil
 from datetime import datetime
 import numpy as np
-from julia import Julia, gif_julia, relative
+from julia import Fractal, gif_folder, relative
 from matplotlib import cm, colors
         
 
 ##############################################################
 # Run type
 ##############################################################
-folder = None  # an existing folder containing .pngs
-# if folder is set, will remake the .gif without any simulation. if not, will run a normal simulation
+run_type_options = [
+    'julia',       # make a Julia set
+    'mandelbrot',  # make a Mandelbrot-like set
+    'reanimate'    # take an existing folder of .pngs and make it a gif
+]
+run_type = 'mandelbrot'
+folder = None  # folder path. optional unless run_type is reanimate
 
 
 ##############################################################
 # Display parameters
 ##############################################################
-pixels = 1024  # pixel dimension of image. image will always be square
-frames = 10  # how many frames to generate
-seconds = min(1, frames / 24)  # how many seconds the animation should last
+pixels = 1024  # pixel dimension of image
+xpixels = pixels  # if you want to set x and y dimensions separately, you can change these variables
+ypixels = pixels
+aspect_ratio = xpixels / ypixels
+frames = 1  # how many frames to generate
+seconds = min(1, frames / 24)  # how many seconds the animation should last, if there is one
 colormap = cm.inferno  # how to color the display. try cm.inferno, cm.viridis, cm.cool, cm.prism, and more!
 # See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info
 color_by_options = [
@@ -28,15 +36,17 @@ color_by_options = [
     'undiverged', # absolute value of each undivergent point, or 0 for any divergent point
     'nested'      # how many iterations it took to diverge, or absolute value if it didn't diverge
 ]
-color_by = 'iterations'
-normalize_frame_colors = True  # try to maintain consistent colors for specific data values between frames
+color_by = 'diverged'
+normalize_frame_colors = False  # try to maintain consistent colors for specific data values between frames
 # If the number of steps varies between frames and you are displaying iterations, 
 # having this as True will show undiverged points differently between different frames.
 
 ##############################################################
 # Fixed simulation parameters
 ##############################################################
-size = 3  # size of the viewing window in the complex plane
+# size = 3
+height = 3  # height of the viewing window in the complex plane
+width = height * aspect_ratio
 center = 0  # center of the viewing window; must be a complex number
 # center = complex(0.195, 0.245)  # another possible value; good with param at 169 degrees and radius 0.8 
 point_value_max = 10  # maximum absolute value at any point
@@ -54,7 +64,7 @@ if fixed_steps:
     steps = 100
 else:
     steps_start = 10
-    steps_end = 100
+    steps_end = 130
 
 # the zoom of the window
 # works by multiplying the size
@@ -81,7 +91,7 @@ else:
 power = None  # placeholder
 fixed_power = True
 if fixed_power:
-    power = 2  # power 
+    power = 2
 else:
     power_start = 1
     power_end = 5
@@ -89,20 +99,22 @@ else:
 # the step equation for any point is x^p + c. this sets c
 param = None  # placeholder
 fixed_param = True
+param_radius = 0.8  # this applies to both fixed and variable parameters
 if fixed_param:
     # you can also just set param equal to any complex number here
-    param_radius = 0.8
     param_degrees = 169
+    # param = complex(-0.3632, 0.7128)
 else:
     # default setup traces a circle in the complex plane, this sets the range
-    param_radius = 0.8
-    param_degrees_center = 180
-    param_degrees_range = 360
+    param_degrees_center = 135
+    param_degrees_range = 40
     param_degrees_start = param_degrees_center - param_degrees_range / 2
     param_degrees_end = param_degrees_center + param_degrees_range / 2
 
 start = datetime.now()
-if folder is None:
+if run_type == 'reanimate':
+    gif_folder(folder=folder, seconds=seconds)
+else:
     # def _colormap_red(x): return 0.75 * np.sin((x * 5 + .25) * np.pi) + 0.67
     # def _colormap_green(x): return 0 # .55 * np.sin((x * 17 - 0.25) * np.pi) + 0.33
     # def _colormap_blue(x): return 0 # -1.1 * np.sin((x * 5) * np.pi)
@@ -132,6 +144,8 @@ if folder is None:
     if shifting is None:
         if not fixed_shift:
             shifting = np.linspace(shift_start, shift_end, frames)
+        else:
+            print('undefined shift?')
     shifting = shifting + (1 - zscale) * center  # this keeps the zoom centered
 
     if power is None:
@@ -149,16 +163,21 @@ if folder is None:
         param = np.asarray([param_radius * pow(np.e, complex(0, ((n * arcrange / frames + param_degrees_start) / 360) * 2 * np.pi)) 
                             for n in range(frames)])
         folder_param = f'{param_radius:.3f}r{param_degrees_start:.02f}-{param_degrees_end:.02f}d'
-
-    folder = relative('output', start.strftime('%Y%m%d%H%M%S') + 
-                        f' {pixels}px {frames}f {size}w {folder_steps}s {folder_param}p')
+    if folder is None:
+        folder = relative('output', start.strftime('%Y%m%d%H%M%S') + 
+                         f' {xpixels}x{ypixels}px {height:.02f}x{width:.02f}w {frames}f {folder_steps}s {folder_param}p')
     os.makedirs(folder)
     try:
-        julia = Julia(pixels, pixels, 
-                    -size/2 + center.real, size/2 + center.real, -size/2 + center.imag, size/2 + center.imag,
+        julia = Fractal(xpixels, ypixels, 
+                    -width/2 + center.real, width/2 + center.real, -height/2 + center.imag, height/2 + center.imag,
                     zadd=shifting, zscale=zscale, 
-                    frames=frames, 
-                    valmax=point_value_max, power=power, param=param)
+                    frames=frames)
+        if run_type == 'julia':
+            julia.init_julia(power=power, param=param, valmax=point_value_max)
+        elif run_type == 'mandelbrot':
+            julia.init_mandelbrot(power=power, valmax=point_value_max)
+        else:
+            raise ValueError(f'Run type must be either julia or mandelbrot, but was: {run_type}')
         # print(julia.array)
         julia.iterate(steps, log_interval=1)
         julia.show(color_by, normalize_frame_depths=normalize_frame_colors)
@@ -169,7 +188,5 @@ if folder is None:
             print("Deleting folder")
             shutil.rmtree(folder)
         raise e
-else:
-    gif_julia(folder=folder, seconds=seconds)
 end = datetime.now()
 print(f'Done at {end}. Took {end - start}')

@@ -1,4 +1,6 @@
-A numpy-based [Julia set](https://en.wikipedia.org/wiki/Julia_set) image generator, with support for single images or animations.
+A numpy-based fractal image generator, with support for single images or animations.
+Can generate [Julia sets](https://en.wikipedia.org/wiki/Julia_set) and variations on the
+[Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
 
 ![spiraling tiled fractal](./examples/julia0031_169_50.png)
 
@@ -10,15 +12,20 @@ can be directly edited if you want behaviors more complex than the defaults on t
 High-level parameters:
 
 * Run type
-  * folder: an existing folder containing .pngs. If set, will remake the .gif in that folder without any simulation.
-    Leave as None to run a normal simulation
+  * run_type: String specifying what type of output we're producing. Options:
+    * julia: a Julia set
+    * mandelbrot: a Mandelbrot-like set. will ignore the 'param' variable seen below.
+    * reanimate: recreates the gif from a folder of .pngs. Does not run any further calculations
+  * folder: a folder for the output. optional except with run_type = 'reanimate'
 
 * Display parameters
-  * pixels: pixel dimension of image. image will always be square
-  * frames: how many frames to generate
+  * pixels: by default, fills in values for xpixels and ypixels
+  * xpixels: how many pixels wide the images should be
+  * ypixels: how many pixels tall the images should be
+  * frames: how many frames to generate (if 1, will not animate)
   * seconds: how long the animation should be
   * colormap: MatPlotLib colormap that defines how to color the display. See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info. I like cm.inferno, cm.viridis, and cm.plasma; cm.prism is amusingly ugly.
-  * color_by: String defining what data should be fed into the colormap.
+  * color_by: String defining what data should be fed into the colormap. Options are:
     * iterations: color each point by how many iterations it lasted without diverging
     * diverged: how many iterations it took to diverge, or 0 if it didn't diverge
     * array: absolute value of each point (this will be the maximum value for any divergent point)
@@ -29,13 +36,14 @@ High-level parameters:
     having this as True will show undiverged points differently between different frames.
 
 * Fixed simulation parameters
-  * size: size of the viewing window in the complex plane
-  * center: center of the viewing window. must be a complex number
+  * height: height of the viewing window in the complex plane. Width will be determined by the 
+    ratio of xpixels to ypixels
+  * center: center of the viewing window as a complex number
   * point_value_max: maximum absolute value at any point
 
 
 * Variable simulation parameters
-  * These can be fixed or vary by frame. will be linearly interpolated frame-by-frame unless stated otherwise
+  * These can be fixed or vary by frame. If they vary, they will be linearly interpolated frame-by-frame unless stated otherwise
   * steps: how many steps to run for
   * zoom: the zoom of the window. smaller values of this mean zooming out; larger values mean zooming in. avoid 0
     * zoom_start: zoom at the first frame
@@ -46,7 +54,7 @@ High-level parameters:
   * power: sets `p` in the step equation `x^p + c`
     * power_start: power at the first frame
     * power_end: power at the last frame
-  * param: sets `c` in the step equation `x^p + c`. can be set directly, or by radius and degrees. will trace a circle around the origin if not fixed
+  * param: sets `c` in the step equation `x^p + c`. can be set directly, or by radius and degrees. Will trace a circle around the origin if not fixed
     * param_radius: distance of param from origin. Available both in fixed and variable modes
     * param_degrees: degrees of param relative to the positive real numbers. Fixed mode only
     * param_degrees_center: optional way to set param_degrees_start and param_degrees_end. 

@@ -9,24 +9,41 @@ from regex import W
 def relative(*args):
     return os.path.join(os.path.dirname(__file__), *args)
 
-class Julia:
-    def __init__(self, xpixels, ypixels, xmin=-1, xmax=1, ymin=-1, ymax=1, zadd=None, zscale=None, frames=1,
-                 power=2, param=complex(-0.982, 0.21), valmax=2):
+class Fractal:
+    def __init__(self, xpixels, ypixels, xmin=-1, xmax=1, ymin=-1, ymax=1, zadd=None, zscale=None, frames=1):
         self.frames = frames
         self.xpixels = xpixels
         self.ypixels = ypixels
-        x = np.linspace(xmin, xmax, xpixels)
-        y = np.linspace(ymin, ymax, ypixels)
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
         if zscale is None:
-            zscale = np.ones(self.frames)
-        zs, xs, ys = np.meshgrid(zscale, x, y, sparse=True, indexing='ij')
+            self.zscale = np.ones(self.frames)
+        else:
+            self.zscale = zscale
+        self.zadd = zadd
+        self.zscale = zscale
+        self.total_steps = 0
+        self.array = None
+        self.iterations = None
+        self.to_show = None
+        self.power = None
+        self.param = None
+        self.arraypower = None
+        self.arrayparam = None
+        self.valmax = None
+
+    def init_julia(self, power=2, param=complex(-0.982, 0.21), valmax=2):
+        x = np.linspace(self.xmin, self.xmax, self.xpixels)
+        y = np.linspace(self.ymin, self.ymax, self.ypixels)
+        zs, xs, ys = np.meshgrid(self.zscale, x, y, sparse=True, indexing='ij')
         self.array = zs * (xs + 1j * ys)
-        if zadd is not None:
-            self.array += zadd[:, np.newaxis, np.newaxis]
+        if self.zadd is not None:
+            self.array += self.zadd[:, np.newaxis, np.newaxis]
+        print(self.array.shape)
         self.array = self.array.astype(np.complex64, casting='same_kind', copy=False)
         self.iterations = np.zeros(self.array.shape, dtype=np.uint16)
-        self.to_show = None
-        self.total_steps = 0
         self.arraypower = isinstance(power, np.ndarray)
         self.arrayparam = isinstance(param, np.ndarray)
         if self.arraypower:
@@ -39,6 +56,23 @@ class Julia:
             self.param = param
         if np.abs(param).max() > 2:
             print('Warning: parameter will produce bad values')
+        self.valmax = valmax
+
+    def init_mandelbrot(self, power=2, valmax=2):
+        self.array = np.zeros((self.frames, self.xpixels, self.ypixels), dtype=np.complex64)
+        self.iterations = np.zeros((self.frames, self.xpixels, self.ypixels), dtype=np.uint16)
+        self.power = power
+        self.arraypower = isinstance(power, np.ndarray)
+        if self.arraypower:
+            self.power = np.broadcast_to(power[:, np.newaxis, np.newaxis], self.array.shape)
+        else:
+            self.power = power
+        x = np.linspace(self.xmin, self.xmax, self.xpixels)
+        y = np.linspace(self.ymin, self.ymax, self.ypixels)
+        zs, xs, ys = np.meshgrid(self.zscale, x, y, indexing='ij')
+        self.param = zs * (xs + 1j * ys)
+        self.param = self.param.astype(np.complex64, casting='same_kind', copy=False)
+        self.arrayparam = True
         self.valmax = valmax
 
         
@@ -128,7 +162,7 @@ class Julia:
                 scaled = abs_array / abs_array.max()
             else:
                 scaled = abs_array
-            scaled = np.flip(scaled, axis=0)
+            scaled = np.transpose(np.flip(scaled, axis=1))
             if grayscale:
                 im = Image.fromarray(np.uint8(scaled * 255), 'L')
             else:
@@ -160,73 +194,13 @@ def save_gif(images, path, seconds=-1):
         duration = 50
     images[0].save(path, save_all=True, append_images=images[1:], duration=duration, loop=0, disposal=2)
 
-def gif_julia(folder, seconds=0):
+def gif_folder(folder, filename='julia_animated.gif', seconds=0):
+    if not os.path.isdir(folder):
+        folder = relative('output', folder)
     images = []
     pngs = sorted(filter(lambda fn: os.path.splitext(fn)[1] == '.png', os.listdir(folder)))
     for fn in pngs:
-        im = Image.open(relative('output', folder, fn))
+        im = Image.open(os.path.join(folder, fn))
         images.append(im.convert('P', palette=Image.ADAPTIVE)) 
-    save_gif(images, relative('output', folder, f'julia_animated.gif'), seconds=seconds)
-       
-
-if __name__ == '__main__':
-    frames = 12
-    start = datetime.now()
-    folder = None  # relative('output', '20220827163008 2048px 60f 3w 200s 169a30r')
-    if folder is None:
-        # def _colormap_red(x): return 0.75 * np.sin((x * 2 + .25) * np.pi) + 0.67
-        # def _colormap_green(x): return .75 * np.sin((x * 2 - 0.25) * np.pi) + 0.33
-        # def _colormap_blue(x): return -1.1 * np.sin((x * 2) * np.pi)
-        # colormap_spec = {'red': _colormap_red, 'green': _colormap_green, 'blue': _colormap_blue}
-        # colormap = colors.LinearSegmentedColormap('custom', colormap_spec)
-        colormap = cm.inferno
-        # matplotlib predefined colormaps are useful here - cm.viridis, cm.ocean, cm.plasma, cm.gist_earth, etc.
-        # my favorite is cm.inferno
-        # try cm.prism some time, it's ugly as sin
-        # the custom colormap is a prism variant (doesn't move as fast so it's somewhat less ugly) 
-
-        # window parameters
-        pixels = 1024
-        size = 3
-        center = 0
-        # center = complex(0.195, 0.245)
-        zoom = None  # vector of how much to zoom in the window relative to start, per frame; smaller shrinks the window
-        shifting = None  # vector of how much to move the window relative to start per frame
-        # zoom = np.full(frames, 1 - 75/120)
-        # zoom = np.asarray([1-i/frames for i in range(frames)])  
-        # shifting = (1 - zoom) * center  # this keeps the zoom centered
-
-        # general simulation parameters
-        steps = 100
-        power = 2 # np.asarray([3 + i * 3 / frames for i in range(frames)])
-
-        # complex parameter location (range is broken up into frames)
-        # arccenter = 169.81
-        arccenter = 169.81
-        arcrange = 30
-        arcmin = arccenter - arcrange / 2
-        param = np.asarray([0.8 * pow(np.e, complex(0, ((n * arcrange / frames + arcmin) / 360) * 2 * np.pi)) for n in range(frames)])
-        # param = 0.8 * pow(np.e, complex(0, arcmin / 360) * 2 * np.pi)
-
-        folder = relative('output', start.strftime('%Y%m%d%H%M%S') + 
-                         f' {pixels}px {frames}f {size}w {steps}s {arccenter}a{arcrange}r')
-        os.makedirs(folder)
-        try:
-            julia = Julia(pixels, pixels, 
-                        -size/2 + center.real, size/2 + center.real, -size/2 + center.imag, size/2 + center.imag,
-                        zadd=shifting, zscale=zoom, 
-                        valmax=10, power=power, param=param,
-                        frames=frames)
-            # print(julia.array)
-            julia.iterate(steps, log_interval=1)
-            julia.show('iterations')
-            julia.image(folder=folder, colormap=colormap, animate=True, seconds=min(1, frames / 24))
-        except Exception as e:
-            print("Got exception:", e)
-            if len(os.listdir(folder)) == 0:
-                print("Deleting folder")
-                os.remove(folder)
-    else:
-        gif_julia(folder=folder, seconds=frames / 15)
-    end = datetime.now()
-    print(f'Done at {end}. Took {end - start}')
+    save_gif(images, os.path.join(folder, filename), seconds=seconds)
+ 
