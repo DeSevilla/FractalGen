@@ -2,7 +2,8 @@ A numpy-based fractal image generator, with support for single images or animati
 Can generate [Julia sets](https://en.wikipedia.org/wiki/Julia_set) and variations on the
 [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
 
-The command to run the fractal generator is `python main.py CFG`, where CFG is the path of a configuration file. 
+The command to run the fractal generator is `python main.py CFG`, where CFG is the path of a configuration file
+(e.g. `python main.py default.yaml`). 
 See the provided .yaml files for config examples. Full config parameter documentation is below.
 
 ![spiraling tiled fractal](./example_images/julia_default.png)
