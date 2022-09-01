@@ -18,7 +18,7 @@ Config parameters:
   * folder: a folder for the output. optional except with run_type = 'reanimate'
 
 * Display parameters
-  * pixels: integer by default, fills in values for xpixels and ypixels
+  * pixels: integer by default, fills in values for xpixels and ypixels. Alternative parameters are:
     * xpixels: how many pixels wide the images should be
     * ypixels: how many pixels tall the images should be
   * frames: integer, how many frames to generate (if 1, will not animate)
@@ -46,20 +46,22 @@ Config parameters:
 
 * Variable simulation parameters
   * These can be fixed or vary by frame. If they vary, they will be linearly interpolated frame-by-frame unless stated otherwise
-  * steps: integer, how many steps to run for
+  * steps: integer, how many steps to run for. Alternative parameters are:
+    * steps_start: steps to run for the first frame
+    * steps_end: steps to run for the last frame
   * zoom: float, the zoom of the window. Smaller values of this mean zooming out; larger values mean zooming in.
-    Must be positive.
+    Must be positive. Alternative parameters are:
     * zoom_start: zoom at the first frame
     * zoom_end: zoom at the last frame
-  * shift: complex number, how much the window should be shifted (will be added to center)
+  * shift: complex number, how much the window should be shifted (will be added to center). Alternative parameters are:
     * shift_start: shift at the first frame
     * shift_end: shift at the last frame
-  * power: float, `p` in the step equation `x^p + c`
+  * power: float, `p` in the step equation `x^p + c`. Alternative parameters are:
     * power_start: power at the first frame
     * power_end: power at the last frame
   * param: complex, `c` in the step equation `x^p + c`. can be set directly, or by radius and degrees.
-    Will trace a circle around the origin if not fixed
+    Will trace a circle around the origin if not fixed. Alternative parameters are:
     * param_radius: float, distance of param from origin. Available both in fixed and variable modes
-    * param_degrees: float, degrees of param relative to the positive real numbers. Fixed mode only
+    * param_degrees: float, degrees of param relative to the positive real numbers. Fixed mode only. Alternative parameters are:
       * param_degrees_start: degrees of param at first frame. Variable mode only
       * param_degrees_end: degrees of param at last frame. Variable mode only
