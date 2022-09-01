@@ -1,7 +1,6 @@
-from datetime import datetime
 import numpy as np
 from PIL import Image
-from matplotlib import cm, colors
+from matplotlib import cm
 import os
 
 from regex import W
