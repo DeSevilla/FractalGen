@@ -3,7 +3,7 @@ Can generate [Julia sets](https://en.wikipedia.org/wiki/Julia_set) and variation
 [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
 
 The command to run the fractal generator is `python main.py CFG`, where CFG is the path of a configuration file. 
-See default.yaml and variable.yaml for example configs. Full config parameter documentation is below.
+See the provided .yaml files for config examples. Full config parameter documentation is below.
 
 ![spiraling tiled fractal](./example_images/julia_default.png)
 
