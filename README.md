@@ -5,7 +5,7 @@ Can generate [Julia sets](https://en.wikipedia.org/wiki/Julia_set) and variation
 The command to run the fractal generator is `python main.py CFG`, where CFG is the path of a configuration file. 
 See default.yaml and variable.yaml for example configs. Full config parameter documentation is below.
 
-![spiraling tiled fractal](./examples/julia0031_169_50.png)
+![spiraling tiled fractal](./example_images/julia0031_169_50.png)
 
 Config parameters:
 
