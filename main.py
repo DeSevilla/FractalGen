@@ -101,21 +101,17 @@ def load_config(cfg: dict):
             fractal.init_mandelbrot(power=power, valmax=point_value_max)
         else:
             raise ValueError(f'Run type must be either julia or mandelbrot, but was: {run_type}')
-        # print(julia.array)
         fractal.iterate(steps, log_interval=1)
         fractal.show(color_by, normalize_frame_depths=normalize_frame_colors)
         fractal.image(folder=folder, colormap=colormap, animate=True, seconds=seconds)
     except Exception as e:
-        print("Got exception:", e)
         if len(os.listdir(folder)) == 0:
-            print("Deleting folder")
             shutil.rmtree(folder)
         raise e
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a fractal.')
-    parser.add_argument('--config', '-cfg',
-                        metavar='CFG', help='path to a YAML config file', required=True)
+    parser.add_argument('config', help='path to a YAML config file')
     args = parser.parse_args()
     with open(args.config, 'r') as file:
         cfg = load(file, Loader=Loader)

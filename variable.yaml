@@ -1,6 +1,7 @@
 run_type: julia
 pixels: 512
 frames: 20
+seconds: 10
 colormap: inferno
 normalize_frame_colors: True
 height: 3

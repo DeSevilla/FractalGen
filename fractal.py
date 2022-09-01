@@ -3,8 +3,6 @@ from PIL import Image
 from matplotlib import cm
 import os
 
-from regex import W
-
 def relative(*args):
     return os.path.join(os.path.dirname(__file__), *args)
 
@@ -40,7 +38,6 @@ class Fractal:
         self.array = zs * (xs + 1j * ys)
         if self.zadd is not None:
             self.array += self.zadd[:, np.newaxis, np.newaxis]
-        print(self.array.shape)
         self.array = self.array.astype(np.complex64, casting='same_kind', copy=False)
         self.iterations = np.zeros(self.array.shape, dtype=np.uint16)
         self.arraypower = isinstance(power, np.ndarray)
@@ -53,8 +50,6 @@ class Fractal:
             self.param = np.broadcast_to(param[:, np.newaxis, np.newaxis], self.array.shape)
         else:
             self.param = param
-        if np.abs(param).max() > 2:
-            print('Warning: parameter will produce bad values')
         self.valmax = valmax
 
     def init_mandelbrot(self, power=2, valmax=2):
@@ -135,7 +130,6 @@ class Fractal:
             self.to_show = self.iterations
             undiverged = self.iterations == self.total_steps
             absvals = np.abs(self.array[undiverged]) / np.abs(self.array[undiverged].max()) * self.iterations.max()
-            print(absvals.min(), absvals.max())
             self.to_show[undiverged] = absvals
         elif show_type == 'diverged':
             self.to_show = self.iterations
@@ -155,6 +149,7 @@ class Fractal:
         if folder is None:
             folder = 'output'
         images = []
+        print('Saving images...')
         for k in range(self.to_show.shape[0]):
             abs_array = np.abs(self.to_show[k])
             if abs_array.max() > 0:
@@ -171,20 +166,17 @@ class Fractal:
             else:
                 angle = np.angle(self.param, deg=True)
             angle_str = f'{angle % 360:.02f}'.replace('.', '_')
-            filename = f'julia{k:04}_{angle_str}.png'
+            filename = f'fractal{k:04}_{angle_str}.png'
             im.save(relative('output', folder, filename))
-            print(f'saving at {filename}')
             if animate:
                 images.append(im)
         if animate:
-            print(len(images))
             if len(images) > 1:
-                save_gif(images, relative(folder, 'julia_animated.gif'), seconds=seconds)
+                save_gif(images, relative(folder, 'fractal_animated.gif'), seconds=seconds)
             else:
                 print('Cannot animate as there is only one frame')
 
 def save_gif(images, path, seconds=-1):
-    print('Saving at', path)
     for i in range(len(images)):
         images[i] = images[i].convert('P', palette=Image.ADAPTIVE)
     if seconds > 0:
@@ -193,7 +185,7 @@ def save_gif(images, path, seconds=-1):
         duration = 50
     images[0].save(path, save_all=True, append_images=images[1:], duration=duration, loop=0, disposal=2)
 
-def gif_folder(folder, filename='julia_animated.gif', seconds=0):
+def gif_folder(folder, filename='fractal_animated.gif', seconds=0):
     if not os.path.isdir(folder):
         folder = relative('output', folder)
     images = []

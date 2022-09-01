@@ -2,14 +2,14 @@ A numpy-based fractal image generator, with support for single images or animati
 Can generate [Julia sets](https://en.wikipedia.org/wiki/Julia_set) and variations on the
 [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
 
-The command to run is `python main.py --config CFG`, where CFG is the path of a YAML config file. 
-See default.yaml and variable.yaml for examples of YAML config files. Full config parameter documentation is below
+The command to run is `python main.py --config CFG`, where CFG is the path of a YAML configuration file. 
+See default.yaml and variable.yaml for example configs. Full config parameter documentation is below.
 
 ![spiraling tiled fractal](./examples/julia0031_169_50.png)
 
 Config parameters:
 
-* Run type
+* Run parameters
   * run_type: String specifying what type of output we're producing. Options:
     * julia: generate a Julia set
     * mandelbrot: generate a Mandelbrot-like set. Will ignore the 'param' variable seen below.
@@ -37,8 +37,8 @@ Config parameters:
     having this as True will show undiverged points differently between different frames.
 
 * Fixed simulation parameters
-  * height: float, height of the viewing window in the complex plane. Width will be determined by the 
-    ratio of xpixels to ypixels
+  * height: float, height of the viewing window in the complex plane. 
+  * width: float, width of the viewing window. defaults to height times the ratio of xpixels to ypixels
   * center: complex number, center of the viewing window
   * point_value_max: float, maximum absolute value at any point
 

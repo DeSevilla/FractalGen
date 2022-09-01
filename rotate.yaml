@@ -1,0 +1,16 @@
+run_type: julia
+pixels: 512
+frames: 60
+colormap: viridis
+normalize_frame_colors: True
+height: 3
+center: 0
+point_value_max: 10
+steps: 50
+zoom: 1
+shift: 0
+power: 2
+param_radius: 0.8
+param_degrees_start: 0
+param_degrees_end: 360
+

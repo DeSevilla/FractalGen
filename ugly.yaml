@@ -1,0 +1,12 @@
+run_type: julia
+pixels: 2048
+frames: 1
+colormap: flag
+color_by: nested
+height: 3
+center: 0
+point_value_max: 16.3
+steps: 41
+power: 2.23
+param_radius: 0.8
+param_degrees: 171
