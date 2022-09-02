@@ -2,8 +2,9 @@ run_type: mandelbrot
 pixels: 1827
 frames: 1
 colormap: copper
+color_by: iterations
 height: 1.809211908125375
-center: !!python/complex (0.34797960336356316-0.6312153214254678j)
+center: !!python/complex (-0.04797960336356316-0.6312153214254678j)
 point_value_max: 6.311905658770598
 steps: 50
 power: 2.649994194781553

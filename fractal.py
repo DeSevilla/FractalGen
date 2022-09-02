@@ -123,13 +123,19 @@ class Fractal:
             self.to_show = self.array
         elif show_type == 'undiverged':
             undiverged = self.iterations == self.total_steps
-            absvals = np.abs(self.array[undiverged]) / np.abs(self.array[undiverged].max()) * self.iterations.max()
+            array_undiverged = np.abs(self.array[undiverged])
             self.to_show = np.zeros(self.array.shape)
-            self.to_show[undiverged] = absvals
+            if array_undiverged.size > 0 and array_undiverged.max() > 0:
+                absvals = array_undiverged / array_undiverged.max() * self.iterations.max()
+                self.to_show[undiverged] = absvals
         elif show_type == 'nested':
             self.to_show = self.iterations
             undiverged = self.iterations == self.total_steps
-            absvals = np.abs(self.array[undiverged]) / np.abs(self.array[undiverged].max()) * self.iterations.max()
+            array_undiverged = np.abs(self.array[undiverged])
+            if array_undiverged.size > 0 and array_undiverged.max() > 0:
+                absvals = array_undiverged / array_undiverged.max() * self.iterations.max()
+            else:
+                absvals = array_undiverged
             self.to_show[undiverged] = absvals
         elif show_type == 'diverged':
             self.to_show = self.iterations
@@ -149,7 +155,7 @@ class Fractal:
         if folder is None:
             folder = 'output'
         images = []
-        print('Saving images...')
+        print(f"Saving image{'s' if self.to_show.shape[0] > 1 else ''}...")
         for k in range(self.to_show.shape[0]):
             abs_array = np.abs(self.to_show[k])
             if abs_array.max() > 0:

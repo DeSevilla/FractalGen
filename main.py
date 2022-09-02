@@ -19,9 +19,9 @@ def randomize_config(filename='random.yaml'):
         index = random.randint(0, len(colormaps) - 1)
         colormap = colormaps[index]
         file.write(f'colormap: {colormap}\n')
-        color_by_options = ['iterations', 'diverged', 'undiverged']
+        color_by_options = ['iterations', 'diverged', 'undiverged', 'array', 'nested']
+        file.write(f'color_by: {color_by_options[random.randint(0, len(color_by_options)-1)]}\n')
         file.write(f'height: {random.random() * 3}\n')
-        file.write(f'width: {random.random() * 3}\n')
         center = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
         file.write(f'center: !!python/complex {center}\n')
         file.write(f'point_value_max: {random.random() * 20}\n')
@@ -29,6 +29,7 @@ def randomize_config(filename='random.yaml'):
         file.write(f'power: {random.random() * 6}\n')
         param = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
         file.write(f'param: !!python/complex {param}\n')
+    return filename
 
 
 
@@ -113,7 +114,7 @@ def load_config(cfg: dict):
                      relative('output', 
                               start.strftime('%Y%m%d%H%M%S') + 
                               f' {xpixels}x{ypixels}px {height:.02f}x{width:.02f}w {frames}f {folder_steps}s {folder_param}p'))
-    os.makedirs(folder)
+    os.makedirs(folder, exist_ok=True)
     try:
         fractal = Fractal(xpixels, ypixels, 
                     -width/2 + center.real, width/2 + center.real, -height/2 + center.imag, height/2 + center.imag,
@@ -125,18 +126,38 @@ def load_config(cfg: dict):
             fractal.init_mandelbrot(power=power, valmax=point_value_max)
         else:
             raise ValueError(f'Run type must be either julia or mandelbrot, but was: {run_type}')
-        fractal.iterate(steps, log_interval=1)
+        fractal.iterate(steps, log_interval=10)
         fractal.show(color_by, normalize_frame_depths=normalize_frame_colors)
-        fractal.image(folder=folder, colormap=colormap, animate=True, seconds=seconds)
+        fractal.image(folder=folder, colormap=colormap, animate=frames > 1, seconds=seconds)
     except Exception as e:
         if len(os.listdir(folder)) == 0:
             shutil.rmtree(folder)
         raise e
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate a fractal.')
-    parser.add_argument('config', help='path to a YAML config file')
+    parser = argparse.ArgumentParser(description='Generate either a Julia set or Mandelbrot variant.')
+    parser.add_argument('YAML', nargs='?', default=None, help='path to a YAML config file, e.g. default.yaml')
+    parser.add_argument('--random', '-r', action='store_true', help='generate a random config file')
     args = parser.parse_args()
-    with open(args.config, 'r') as file:
+    filename = args.YAML
+    if args.random:
+        if filename is None:
+            filename = 'random.yaml'
+        randomize_config(filename)
+        print(f'Randomized config {filename}')
+    if filename is None:
+        while True:
+            filename = input('Enter the name of a .yaml config file (or nothing to run default.yaml): ')
+            if len(filename) == 0:
+                filename = 'default.yaml'
+            if os.path.exists(filename):
+                break
+            else:
+                print(f'File not found: {filename}')
+    with open(filename, 'r') as file:
         cfg = load(file, Loader=Loader)
+    if 'folder' not in cfg:
+        folder_name = (datetime.now().strftime('%Y%m%d%H%M%S') + ' ' + 
+                       os.path.splitext(os.path.basename(filename))[0])
+        cfg['folder'] = relative('output', folder_name)
     load_config(cfg)
