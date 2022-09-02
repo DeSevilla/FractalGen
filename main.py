@@ -1,11 +1,35 @@
 import numpy as np
 import os
 import shutil
+import random
 from fractal import Fractal, gif_folder, relative
 from datetime import datetime
 import matplotlib.pyplot as plt
 from yaml import load, Loader
 import argparse
+
+def randomize_config(filename='random.yaml'):
+    with open(filename, 'w') as file:
+        run_type_options = ['julia', 'mandelbrot']
+        file.write(f'run_type: {run_type_options[random.randint(0, 1)]}\n')
+        file.write(f'xpixels: {random.randint(512, 2048)}\n')
+        file.write(f'ypixels: {random.randint(512, 2048)}\n')
+        file.write('frames: 1\n')
+        colormaps = plt.colormaps()
+        index = random.randint(0, len(colormaps) - 1)
+        colormap = colormaps[index]
+        file.write(f'colormap: {colormap}\n')
+        color_by_options = ['iterations', 'diverged', 'undiverged']
+        file.write(f'height: {random.random() * 3}\n')
+        file.write(f'width: {random.random() * 3}\n')
+        center = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
+        file.write(f'center: !!python/complex {center}\n')
+        file.write(f'point_value_max: {random.random() * 20}\n')
+        file.write(f'steps: {random.randint(10, 200)}\n')
+        file.write(f'power: {random.random() * 6}\n')
+        param = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
+        file.write(f'param: !!python/complex {param}\n')
+
 
 
 def load_config(cfg: dict):
