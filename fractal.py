@@ -65,6 +65,8 @@ class Fractal:
         y = np.linspace(self.ymin, self.ymax, self.ypixels)
         zs, xs, ys = np.meshgrid(self.zscale, x, y, indexing='ij')
         self.param = zs * (xs + 1j * ys)
+        if self.zadd is not None:
+            self.param = self.param + self.zadd[:, np.newaxis, np.newaxis]
         self.param = self.param.astype(np.complex64, casting='same_kind', copy=False)
         self.arrayparam = True
         self.valmax = valmax

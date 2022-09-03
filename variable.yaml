@@ -5,14 +5,14 @@ seconds: 10
 colormap: inferno
 normalize_frame_colors: True
 height: 3
-center: !!python/complex 0.3+0.5j  # if you want to put in a complex number it needs to be in this format 
+center: 0.3+0.5j  # if you want to put in a complex number it needs to be in this format 
 point_value_max: 10
 steps_start: 10
 steps_end: 100
 zoom_start: 1
 zoom_end: 5
 shift: 0
-shift_end: !!python/complex 1+2j
+shift_end: 1+2j
 power_start: 2
 power_end: 5
 param_radius: 0.8

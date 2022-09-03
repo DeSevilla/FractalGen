@@ -5,8 +5,17 @@ import random
 from fractal import Fractal, gif_folder, relative
 from datetime import datetime
 import matplotlib.pyplot as plt
-from yaml import load, Loader
+from yaml import safe_load
 import argparse
+import regex
+
+def load_complex(s):
+    if isinstance(s, complex) or isinstance(s, int) or isinstance(s, float):
+        return s
+    elif isinstance(s, str):
+        return complex(''.join(s.split()).replace('i', 'j'))
+    else:
+        raise ValueError(f'Could not load complex number from {s} of type {type(s)}')
 
 def randomize_config(filename='random.yaml'):
     with open(filename, 'w') as file:
@@ -23,12 +32,12 @@ def randomize_config(filename='random.yaml'):
         file.write(f'color_by: {color_by_options[random.randint(0, len(color_by_options)-1)]}\n')
         file.write(f'height: {random.random() * 3}\n')
         center = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
-        file.write(f'center: !!python/complex {center}\n')
+        file.write(f'center: {center}\n')
         file.write(f'point_value_max: {random.random() * 20}\n')
         file.write(f'steps: {random.randint(10, 200)}\n')
         file.write(f'power: {random.random() * 6}\n')
         param = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
-        file.write(f'param: !!python/complex {param}\n')
+        file.write(f'param: {param}\n')
     return filename
 
 
@@ -53,7 +62,7 @@ def load_config(cfg: dict):
     normalize_frame_colors = cfg.get('normalize_frame_colors', False)
     height = cfg.get('height', 3)
     width = cfg.get('width', height * aspect_ratio)
-    center = cfg.get('center', 0)
+    center = load_complex(cfg.get('center', 0))
     point_value_max = cfg.get('point_value_max', 2)
     if 'steps_start' in cfg and 'steps_end' in cfg:
         steps_start = cfg['steps_start']
@@ -75,11 +84,11 @@ def load_config(cfg: dict):
         zscale = np.full(frames, 1 / zoom)
 
     if 'shift_start' in cfg and 'shift_end':
-        shift_start = cfg['shift_start']
-        shift_end = cfg['shift_end']
+        shift_start = load_complex(cfg['shift_start'])
+        shift_end = load_complex(cfg['shift_end'])
         shift = np.linspace(shift_start, shift_end, frames)
     else:
-        shift = cfg.get('shift', 0)
+        shift = load_complex(cfg.get('shift', 0))
     shift = shift + (1 - zscale) * center  # this keeps the zoom centered, maybe?
 
     if 'power_start' in cfg and 'power_end' in cfg:
@@ -104,7 +113,7 @@ def load_config(cfg: dict):
         param = param_radius * pow(np.e, complex(0, (param_degrees / 360) * 2 * np.pi))
     else:
         fixed_param = True
-        param = cfg.get('param', complex(-0.982, 0.232))
+        param = load_complex(cfg.get('param', -0.982+0.232j))
     if fixed_param:
         folder_param = f'{np.abs(param):.3f}r{np.angle(param, deg=True):.02f}d'
     else:
@@ -155,7 +164,7 @@ if __name__ == '__main__':
             else:
                 print(f'File not found: {filename}')
     with open(filename, 'r') as file:
-        cfg = load(file, Loader=Loader)
+        cfg = safe_load(file)
     if 'folder' not in cfg:
         folder_name = (datetime.now().strftime('%Y%m%d%H%M%S') + ' ' + 
                        os.path.splitext(os.path.basename(filename))[0])

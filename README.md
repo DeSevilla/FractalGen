@@ -67,8 +67,8 @@ Config parameters:
   * power: float, `p` in the step equation `x^p + c`. Alternative parameters are:
     * power_start: power at the first frame
     * power_end: power at the last frame
-  * param: complex, `c` in the step equation `x^p + c`. can be set directly, or by radius and degrees.
-    Will trace a circle around the origin if not fixed. Alternative parameters are:
+  * param: complex, `c` in the step equation `x^p + c`. Not applicable to Mandelbrot sets.
+    Can be set directly, or by alternative parameters:
     * param_radius: float, distance of param from origin. Available both in fixed and variable modes
     * param_degrees: float, degrees of param relative to the positive real numbers. Fixed mode only. Alternative parameters are:
       * param_degrees_start: degrees of param at first frame. Variable mode only
