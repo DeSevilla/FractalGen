@@ -1,0 +1,11 @@
+run_type: mandelbrot
+xpixels: 2048
+ypixels: 2048
+frames: 1
+colormap: jet
+color_by: iterations
+height: 3
+point_value_max: 3.3665925162957655
+steps: 100
+power: 2.3656485515267196
+param: (-0.11184385493403592+0.512792238588708j)

@@ -178,6 +178,8 @@ class Fractal:
             im.save(relative('output', folder, filename))
             if animate:
                 images.append(im)
+            elif k == 0:
+                im.show()
         if animate:
             if len(images) > 1:
                 save_gif(images, relative(folder, 'fractal_animated.gif'), seconds=seconds)

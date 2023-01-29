@@ -9,6 +9,9 @@ from yaml import safe_load
 import argparse
 import regex
 
+def configs(filename):
+    return os.path.join('configs', filename)
+
 def load_complex(s):
     if isinstance(s, complex) or isinstance(s, int) or isinstance(s, float):
         return s
@@ -18,7 +21,7 @@ def load_complex(s):
         raise ValueError(f'Could not load complex number from {s} of type {type(s)}')
 
 def randomize_config(filename='random.yaml'):
-    with open(filename, 'w') as file:
+    with open(configs(filename), 'w') as file:
         run_type_options = ['julia', 'mandelbrot']
         file.write(f'run_type: {run_type_options[random.randint(0, 1)]}\n')
         file.write(f'xpixels: {random.randint(512, 2048)}\n')
@@ -30,7 +33,7 @@ def randomize_config(filename='random.yaml'):
         file.write(f'colormap: {colormap}\n')
         color_by_options = ['iterations', 'diverged', 'undiverged', 'array', 'nested']
         file.write(f'color_by: {color_by_options[random.randint(0, len(color_by_options)-1)]}\n')
-        file.write(f'height: {random.random() * 3}\n')
+        file.write(f'height: {random.random() * 2.5 + .5}\n')
         center = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'
         file.write(f'center: {center}\n')
         file.write(f'point_value_max: {random.random() * 20}\n')
@@ -42,7 +45,7 @@ def randomize_config(filename='random.yaml'):
 
 
 
-def load_config(cfg: dict):
+def run_config(cfg: dict):
     start = datetime.now()
     run_type = cfg.get('run_type', 'julia')
     if run_type == 'reanimate':
@@ -125,6 +128,7 @@ def load_config(cfg: dict):
                               f' {xpixels}x{ypixels}px {height:.02f}x{width:.02f}w {frames}f {folder_steps}s {folder_param}p'))
     os.makedirs(folder, exist_ok=True)
     try:
+        # print(power)
         fractal = Fractal(xpixels, ypixels, 
                     -width/2 + center.real, width/2 + center.real, -height/2 + center.imag, height/2 + center.imag,
                     zadd=shift, zscale=zscale, 
@@ -154,19 +158,28 @@ if __name__ == '__main__':
             filename = 'random.yaml'
         randomize_config(filename)
         print(f'Randomized config {filename}')
-    if filename is None:
-        while True:
+    while True:
+        if filename is None:
             filename = input('Enter the name of a .yaml config file (or nothing to run default.yaml): ')
-            if len(filename) == 0:
-                filename = 'default.yaml'
-            if os.path.exists(filename):
-                break
-            else:
-                print(f'File not found: {filename}')
-    with open(filename, 'r') as file:
+        if len(filename) == 0:
+            filename = 'default.yaml'
+        if os.path.exists(configs(filename)):
+            break
+        elif os.path.exists(configs(filename + '.yaml')):
+            filename = filename + '.yaml'
+            break
+        else:
+            print(f'File not found: {filename}')
+            filename = None
+    with open(configs(filename), 'r') as file:
         cfg = safe_load(file)
     if 'folder' not in cfg:
-        folder_name = (datetime.now().strftime('%Y%m%d%H%M%S') + ' ' + 
+        folder_name = (datetime.now().strftime('%Y-%m-%d-%H%M%S') + ' ' + 
                        os.path.splitext(os.path.basename(filename))[0])
         cfg['folder'] = relative('output', folder_name)
-    load_config(cfg)
+    os.makedirs(cfg['folder'], exist_ok=True)
+    shutil.copy2(configs(filename), cfg['folder'])
+    start = datetime.now()
+    run_config(cfg)
+    end = datetime.now()
+    print(f'Done in {end - start}')

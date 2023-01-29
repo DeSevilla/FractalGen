@@ -1,0 +1,12 @@
+run_type: mandelbrot
+pixels: 8196
+frames: 1
+colormap: bone_r
+color_by: iterations
+height: 2.5
+center: -0.745+0.1008i
+point_value_max: 10
+steps: 600
+zoom: 250
+power: 2
+# do not set param for Mandelbrot sets, as it will be ignored

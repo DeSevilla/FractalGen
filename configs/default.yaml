@@ -1,5 +1,5 @@
 run_type: julia
-pixels: 1024
+pixels: 4096
 frames: 1
 colormap: inferno
 normalize_frame_colors: False

@@ -1,0 +1,15 @@
+run_type: mandelbrot
+pixels: 1024
+frames: 1
+seconds: 3
+colormap: inferno
+color_by: diverged
+normalize_frame_colors: False
+height: 3
+center: 0
+point_value_max: 10
+steps: 50
+zoom: 1
+shift: 0
+power: 8
+# do not set param for Mandelbrot sets, as it will be ignored
