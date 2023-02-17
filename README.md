@@ -7,7 +7,11 @@ Then navigate to this folder and run the command `python -m pip install -r requi
 all required libraries.
 
 To test it out, you can run `python main.py default.yaml` or `python main.py default`.
-Check out the yaml files in /configs for more examples of how it can be configured. Or, more generally:
+Check out the yaml files in /configs for more examples of how it can be configured.
+variable.yaml has some annotations to explain how variable parameters work with animations.
+More formal information is below.
+
+![spiraling tiled fractal](./example_images/julia_default.png)
 
 usage: `python main.py [-h] [--random] [FILE]`
 
@@ -21,9 +25,6 @@ options:
 If no configuration file is provided and --random is not used, it will prompt for a config file. 
 The config used for a given run will be stored in its output folder, so it can be moved into the configs folder
 to recreate that run if the original config file has changed or no longer exists.
-See the provided .yaml files in the /configs folder for config examples. Full parameter documentation is below.
-
-![spiraling tiled fractal](./example_images/julia_default.png)
 
 Config parameters:
 
