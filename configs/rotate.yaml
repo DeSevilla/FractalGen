@@ -1,6 +1,6 @@
 run_type: julia
 pixels: 512
-frames: 60
+frames: 120
 colormap: viridis
 normalize_frame_colors: True
 height: 3

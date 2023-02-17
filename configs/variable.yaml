@@ -1,21 +1,21 @@
 run_type: julia
 pixels: 512
-frames: 20
-seconds: 10
+frames: 100                   # 100 frames and a lot of variation; this will take some time to run
+seconds: 5                    # output animation will be 5 seconds, at 20fps (default is 24)
 colormap: inferno
-normalize_frame_colors: True
+normalize_frame_colors: True  # tries to keep a consistent color scale between frames
 height: 3
-center: 0.3+0.5j  # if you want to put in a complex number it needs to be in this format 
+center: 0.3+0.5j              # if you want to put in a complex number it needs to be in this format 
 point_value_max: 10
-steps_start: 10
-steps_end: 100
-zoom_start: 1
-zoom_end: 5
-shift: 0
-shift_end: 1+2j
-power_start: 2
-power_end: 5
-param_radius: 0.8
-param_degrees_start: 120
-param_degrees_end: 180
+steps_start: 10               # first frame is only run for 10 steps
+steps_end: 100                # last frame is run for 100 steps
+zoom_start: 1                 # starts with a standard window
+zoom_end: 5                   # zooms in 5 times over the course of the animation
+shift: 0  
+shift_end: 1+2j               # also moves over during the animation
+power_start: 2                # starts with an equation like z^2 + c
+power_end: 5                  # ends with z^5 + c
+param_radius: 0.8             # specifies the complex parameter c with polar coordinates, r = 0.8
+param_degrees_start: 120      # theta for the complex parameter starts at 120 degrees
+param_degrees_end: 180        # and ends and 180
 

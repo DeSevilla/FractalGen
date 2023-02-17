@@ -2,10 +2,17 @@ A numpy-based fractal image generator, with support for single images or animati
 Can generate [Julia sets](https://en.wikipedia.org/wiki/Julia_set) and variations on the
 [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
 
+To set this up, install [Python 3.10](https://www.python.org/downloads/release/python-31010/).
+Then navigate to this folder and run the command `python -m pip install -r requirements.txt` to install
+all required libraries.
+
+To test it out, you can run `python main.py default.yaml` or `python main.py default`.
+Check out the yaml files in /configs for more examples of how it can be configured. Or, more generally:
+
 usage: `python main.py [-h] [--random] [FILE]`
 
 positional arguments:
-  * FILE          optional name of a YAML config file within the /configs folder, e.g. default.yaml
+  * FILE          optional name of a YAML config file within the /configs folder, e.g. default.yaml. The '.yaml' can be omitted.
 
 options:
   * -h, --help    show a help message and exit
@@ -32,7 +39,7 @@ Config parameters:
     * xpixels: how many pixels wide the images should be
     * ypixels: how many pixels tall the images should be
   * frames: integer, how many frames to generate (if 1, will not animate)
-  * seconds: float, how long the animation should be
+  * seconds: float, how long the animation should be. Defaults to frames / 24.
   * colormap: string, name of a MatPlotLib colormap that defines how to color the display.
     See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info. 
     I like cm.inferno, cm.viridis, and cm.plasma; cm.prism is amusingly ugly.
@@ -48,7 +55,7 @@ Config parameters:
     having this as True will show undiverged points differently between different frames.
 
 * Fixed simulation parameters
-  * height: float, height of the viewing window in the complex plane. 
+  * height: float, height of the viewing window in the complex plane. If you want this to change over animation, use zoom.
   * width: float, width of the viewing window. defaults to height times the ratio of xpixels to ypixels
   * center: complex number, center of the viewing window
   * point_value_max: float, maximum absolute value at any point
