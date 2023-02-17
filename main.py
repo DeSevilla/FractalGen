@@ -31,7 +31,7 @@ def randomize_config(filename='random.yaml'):
         index = random.randint(0, len(colormaps) - 1)
         colormap = colormaps[index]
         file.write(f'colormap: {colormap}\n')
-        color_by_options = ['iterations', 'diverged', 'undiverged', 'array', 'nested']
+        color_by_options = ['iterations', 'diverged', 'undiverged', 'value', 'nested']
         file.write(f'color_by: {color_by_options[random.randint(0, len(color_by_options)-1)]}\n')
         file.write(f'height: {random.random() * 2.5 + .5}\n')
         center = f'{complex(random.random() * 3 - 1.5, random.random() * 3 - 1.5)}'

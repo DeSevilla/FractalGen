@@ -121,7 +121,7 @@ class Fractal:
             self.array[:, 0, 1] = np.abs(self.array).max()
         if show_type == 'iterations':
             self.to_show = self.iterations
-        elif show_type == 'array':
+        elif show_type == 'value':
             self.to_show = self.array
         elif show_type == 'undiverged':
             undiverged = self.iterations == self.total_steps

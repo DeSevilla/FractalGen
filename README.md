@@ -31,43 +31,44 @@ Config parameters:
 * Run parameters
   * run_type: String specifying what type of output we're producing. Options:
     * julia: generate a Julia set
-    * mandelbrot: generate a Mandelbrot-like set. Will ignore the 'param' variable seen below.
-    * reanimate: recreate the gif from a folder of .pngs. Does not run any further calculations
-  * folder: a folder for the output. optional except with run_type = 'reanimate'
+    * mandelbrot: generate a Mandelbrot-like set. Will ignore the 'param' variable seen below
+    * reanimate: recreate the gif from a folder of .pngs. Does not run any further calculations.
+      Requires folder to be set
+  * folder: a folder for the output. optional except with run_type 'reanimate'
 
 * Display parameters
   * pixels: integer by default, fills in values for xpixels and ypixels. Alternative parameters are:
     * xpixels: how many pixels wide the images should be
     * ypixels: how many pixels tall the images should be
-  * frames: integer, how many frames to generate (if 1, will not animate)
-  * seconds: float, how long the animation should be. Defaults to frames / 24.
+  * frames: integer, how many frames to generate (if 1 or unset, will not animate)
+  * seconds: float, how long the animation should be. Defaults to frames / 24 with a minimum of 1 second
   * colormap: string, name of a MatPlotLib colormap that defines how to color the display.
     See https://matplotlib.org/stable/tutorials/colors/colormaps.html for more options and info. 
-    I like cm.inferno, cm.viridis, and cm.plasma; cm.prism is amusingly ugly.
+    I like inferno, viridis, and plasma; prism is amusingly ugly
   * color_by: string, specifies what data should be fed into the colormap. Options are:
     * iterations: color each point by how many iterations it lasted without diverging
     * diverged: how many iterations it took to diverge, or 0 if it didn't diverge
-    * array: absolute value of each point (this will be the maximum value for any divergent point)
+    * value: absolute value of each point (this will be the maximum value for any divergent point)
     * undiverged: absolute value of each undivergent point, or 0 for any divergent point
     * nested: how many iterations it took to diverge, or absolute value if it didn't diverge
   * normalize_frame_colors: True/False, whether to try to maintain consistent colors for 
     specific data values between frames.
-    If the number of steps varies between frames and color_by is 'iterations', 
-    having this as True will show undiverged points differently between different frames.
+    If the number of steps varies between frames and color_by is 'iterations',
+    having this as True will show undiverged points differently between different frames
 
 * Fixed simulation parameters
-  * height: float, height of the viewing window in the complex plane. If you want this to change over animation, use zoom.
-  * width: float, width of the viewing window. defaults to height times the ratio of xpixels to ypixels
-  * center: complex number, center of the viewing window
-  * point_value_max: float, maximum absolute value at any point
+  * height: float, height of the viewing window in the complex plane. If you want this to change in the animation, use zoom
+  * width: float, width of the viewing window. Defaults to height times the ratio of xpixels to ypixels
+  * center: complex number, center of the viewing window. If you want this to change in the animation, use shift
+  * point_value_max: float, maximum absolute value at any point. Any value of 2 or greater ensures relatively normal behavior
 
 
 * Variable simulation parameters
-  * These can be fixed or vary by frame. If they vary, they will be linearly interpolated frame-by-frame unless stated otherwise
+  * These can be fixed or vary by frame. If they vary, they will be linearly interpolated frame-by-frame unless stated otherwise.
   * steps: integer, how many steps to run for. Alternative parameters are:
     * steps_start: steps to run for the first frame
     * steps_end: steps to run for the last frame
-  * zoom: float, the zoom of the window. Smaller values of this mean zooming out; larger values mean zooming in.
+  * zoom: float, the zoom of the window. Smaller values of this mean zooming out; larger values mean zooming in
     Must be positive. Alternative parameters are:
     * zoom_start: zoom at the first frame
     * zoom_end: zoom at the last frame
@@ -77,7 +78,7 @@ Config parameters:
   * power: float, `p` in the step equation `x^p + c`. Alternative parameters are:
     * power_start: power at the first frame
     * power_end: power at the last frame
-  * param: complex, `c` in the step equation `x^p + c`. Not applicable to Mandelbrot sets.
+  * param: complex, `c` in the step equation `x^p + c`. Not applicable to Mandelbrot sets
     Can be set directly, or by alternative parameters:
     * param_radius: float, distance of param from origin. Available both in fixed and variable modes
     * param_degrees: float, degrees of param relative to the positive real numbers. Fixed mode only. Alternative parameters are:
