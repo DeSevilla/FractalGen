@@ -1,0 +1,14 @@
+run_type: julia
+pixels: 768
+colormap: inferno
+frames: 40
+seconds: 5
+steps: 100
+normalize_frame_colors: True
+# center: 0.666-0.01j
+height: 2.7
+point_value_max: 5
+power: 3
+param_radius: 0.6
+param_degrees_start: 154
+param_degrees_end: 168

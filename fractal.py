@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 from matplotlib import cm
+from datetime import datetime
 import os
 
 def relative(*args):
@@ -82,9 +83,12 @@ class Fractal:
             n = steps
         usepow = self.power
         usepar = self.param
+        prev = datetime.now()
         for k in range(n):
             if log_interval > 0 and k % log_interval == 0:
-                print(f'{k}/{n}') 
+                cur = datetime.now()
+                print(f'{k}/{n} (took {cur - prev})')
+                prev = cur
             absarray = np.abs(self.array)
             to_update = absarray < self.valmax
             if arraysteps:
@@ -171,10 +175,18 @@ class Fractal:
                 im = Image.fromarray(np.uint8(colormap(scaled) * 255), 'RGBA')
             if self.arrayparam:
                 angle = np.angle(self.param[k][0][0], deg=True)
+                radius = np.abs(self.param[k][0][0])
             else:
+                radius = np.abs(self.param)
                 angle = np.angle(self.param, deg=True)
-            angle_str = f'{angle % 360:.02f}'.replace('.', '_')
-            filename = f'fractal{k:04}_{angle_str}.png'
+            if self.arraypower:
+                power = self.power[k][0][0]
+            else:
+                power = self.power
+            angle_str = f'a{angle % 360:.02f}'.replace('.', '_')
+            pow_str = f'p{power:.02f}'.replace('.', '_')
+            rad_str = f'r{radius:.02f}'.replace('.', '_')
+            filename = f'fractal{k:04}_{pow_str}_{angle_str}_{rad_str}.png'
             im.save(relative('output', folder, filename))
             if animate:
                 images.append(im)

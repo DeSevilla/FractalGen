@@ -1,19 +1,20 @@
-run_type: julia
-pixels: 512
-frames: 100                   # 100 frames and a lot of variation; this will take some time to run
-seconds: 5                    # output animation will be 5 seconds, at 20fps (default is 24)
+run_type: julia               # this is not the best-looking output; it's mostly here to be annotated.
+pixels: 512                   # makes fairly small images so it'll run decently fast, hopefully, even with the variance.
+fps: 10                       # comes out to 50 frames by default; try adjusting seconds
+seconds: 5                    # output animation will be 5 seconds
 colormap: inferno
-normalize_frame_colors: True  # tries to keep a consistent color scale between frames
+normalize_frame_colors: True  # tries to keep color scale consistent with # of steps between frames
 height: 3
 center: 0.3+0.5j              # if you want to put in a complex number it needs to be in this format 
 point_value_max: 10
-steps_start: 10               # first frame is only run for 10 steps
-steps_end: 100                # last frame is run for 100 steps
-zoom_start: 1                 # starts with a standard window
+steps_start: 10               # first frame is only run for 10 steps. since some frames run less steps, it'll speed up over the run
+steps_end: 100                # last frame is run for 100 steps.
+zoom_start: 1                 # starts with a standard window (1 = no zoom, <1 means zoom out)
 zoom_end: 5                   # zooms in 5 times over the course of the animation
-shift: 0  
-shift_end: 1+2j               # also moves over during the animation
-power_start: 2                # starts with an equation like z^2 + c
+# shift: 0
+shift_start: 0.5+0.2j
+shift_end: 0                  # also moves over during the animation
+power_start: 1                # starts with an equation like z + c
 power_end: 5                  # ends with z^5 + c
 param_radius: 0.8             # specifies the complex parameter c with polar coordinates, r = 0.8
 param_degrees_start: 120      # theta for the complex parameter starts at 120 degrees

@@ -7,7 +7,6 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from yaml import safe_load
 import argparse
-import regex
 
 def configs(filename):
     return os.path.join('configs', filename)
@@ -57,8 +56,32 @@ def run_config(cfg: dict):
     xpixels = cfg.get('xpixels', pixels)
     ypixels = cfg.get('ypixels', pixels)
     aspect_ratio = xpixels / ypixels
-    frames = cfg.get('frames', 1)
-    seconds = cfg.get('seconds', min(1, frames / 24))
+
+    def check(coll: dict, has: list = None, no: list = None):
+        if has is None:
+            has = []
+        if no is None:
+            no = []
+        return all(map(lambda x: x in coll, has)) and all(map(lambda x: x not in coll, no))
+
+    if check(cfg, has=['frames', 'fps'], no=['seconds']):
+        frames = cfg.get('frames')
+        seconds = cfg.get('fps') * frames
+    elif check(cfg, has=['fps', 'seconds'], no=['frames']):
+        seconds = cfg.get('seconds', 1)
+        frames = cfg.get('fps') * seconds
+    elif check(cfg, has=['frames', 'seconds'], no=['fps']):
+        frames = cfg.get('frames', 1)
+        seconds = cfg.get('seconds', min(1, frames / 24))
+    elif check(cfg, has=['frames', 'seconds', 'fps']):
+        raise ValueError(f'Config has frames, seconds, and fps. Leave one or more unspecified.')
+    else:
+        seconds = cfg.get('seconds', 0)
+        if seconds == 0:
+            frames = 1
+        else:
+            frames = cfg.get('frames', seconds * 24)
+
     colormap_name = cfg.get('colormap', 'inferno')
     colormap = plt.get_cmap(colormap_name)
     color_by = cfg.get('color_by', 'iterations')
@@ -67,41 +90,51 @@ def run_config(cfg: dict):
     width = cfg.get('width', height * aspect_ratio)
     center = load_complex(cfg.get('center', 0))
     point_value_max = cfg.get('point_value_max', 2)
-    if 'steps_start' in cfg and 'steps_end' in cfg:
+    if check(cfg, has=['steps_start', 'steps_end'], no=['steps']):
         steps_start = cfg['steps_start']
         steps_end = cfg['steps_end']
         steps_range = steps_end - steps_start
         # steps = np.linspace(steps_start, steps_end, frames)
         steps = np.asarray([int(steps_range * (i + 1) / frames) + steps_start for i in range(frames)])
         folder_steps = steps.max()
-    else:
+    elif check(cfg, no=['steps_start', 'steps_end']):
         steps = cfg.get('steps', 50)
         folder_steps = steps
+    else:
+        raise ValueError('Config must have either steps_start+steps_end or steps, not both.')
 
-    if 'zoom_start' in cfg and 'zoom_end' in cfg:
+    if check(cfg, has=['zoom_start', 'zoom_end'], no=['zoom']):
         zoom_start = cfg['zoom_start']
         zoom_end = cfg['zoom_end']
         zscale = np.linspace(1 / zoom_start, 1 / zoom_end, frames)
-    else:
+    elif check(cfg, no=['zoom_start', 'zoom_end']):
         zoom = cfg.get('zoom', 1)
         zscale = np.full(frames, 1 / zoom)
+    else:
+        raise ValueError('Config must have either zoom_start+zoom_end or zoom, not both.')
 
-    if 'shift_start' in cfg and 'shift_end':
+    if check(cfg, has=['shift_start', 'shift_end'], no=['shift']):
         shift_start = load_complex(cfg['shift_start'])
         shift_end = load_complex(cfg['shift_end'])
         shift = np.linspace(shift_start, shift_end, frames)
-    else:
+    elif check(cfg, no=['shift_start', 'shift_end']):
         shift = load_complex(cfg.get('shift', 0))
+    else:
+        raise ValueError('Config must have either shift_start+shift_end or shift, not both.')
+
     shift = shift + (1 - zscale) * center  # this keeps the zoom centered, maybe?
 
-    if 'power_start' in cfg and 'power_end' in cfg:
+    if check(cfg, has=['power_start', 'power_end'], no=['power']):
         power_start = cfg['power_start']
         power_end = cfg['power_end']
         power = np.linspace(power_start, power_end, frames)
-    else:
+    elif check(cfg, no=['power_start', 'power_end']):
         power = cfg.get('power', 2)
+    else:
+        raise ValueError('Config must have either power_start+power_end or power, not both.')
 
-    if 'param_degrees_start' in cfg and 'param_degrees_end' and 'param_radius' in cfg:
+    if check(cfg, has=['param_degrees_start', 'param_degrees_end', 'param_radius'], 
+             no=['param_degrees', 'param', 'param_start', 'param_end']):
         fixed_param = False
         param_radius = cfg['param_radius']
         param_degrees_start = cfg['param_degrees_start']
@@ -109,14 +142,24 @@ def run_config(cfg: dict):
         arcrange = param_degrees_end - param_degrees_start
         param = np.asarray([param_radius * pow(np.e, complex(0, ((n * arcrange / frames + param_degrees_start) / 360) * 2 * np.pi)) 
                             for n in range(frames)])
-    elif 'param_radius' in cfg and 'param_degrees' in cfg:
+    elif check(cfg, has=['param_start', 'param_end'], 
+               no=['param_radius', 'param_degrees', 'param_degrees_start', 'param_degrees_end', 'param']):
+        fixed_param = False
+        param_start = load_complex(cfg.get('param_start'))
+        param_end = load_complex(cfg.get('param_end'))
+        param = np.linspace(param_start, param_end, frames)
+    elif check(cfg, has=['param_degrees', 'param_radius'], 
+               no=['param_degrees_start', 'param_degrees_end', 'param', 'param_start', 'param_end']):
         fixed_param = True
         param_radius = cfg['param_radius']
         param_degrees = cfg['param_degrees']
         param = param_radius * pow(np.e, complex(0, (param_degrees / 360) * 2 * np.pi))
-    else:
+    elif check(cfg, no=['param_radius', 'param_degrees', 'param_degrees_start', 'param_degrees_end', 'param_start', 'param_end']):
         fixed_param = True
         param = load_complex(cfg.get('param', -0.982+0.232j))
+    else:
+        raise ValueError("Incompatible specifications of complex parameter. For a fixed value use param or param_radius+param_degrees. "
+                         "For a varying value use param_start+param_end or param_radius+param_degrees_start+param_degrees_end.")
     if fixed_param:
         folder_param = f'{np.abs(param):.3f}r{np.angle(param, deg=True):.02f}d'
     else:
@@ -138,7 +181,7 @@ def run_config(cfg: dict):
         elif run_type == 'mandelbrot':
             fractal.init_mandelbrot(power=power, valmax=point_value_max)
         else:
-            raise ValueError(f'Run type must be either julia or mandelbrot, but was: {run_type}')
+            raise ValueError(f'Run type must be either julia, mandelbrot, but was: {run_type}')
         fractal.iterate(steps, log_interval=10)
         fractal.show(color_by, normalize_frame_depths=normalize_frame_colors)
         fractal.image(folder=folder, colormap=colormap, animate=frames > 1, seconds=seconds)

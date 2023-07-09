@@ -6,23 +6,29 @@ To set this up, install [Python 3.10](https://www.python.org/downloads/release/p
 Then navigate to this folder and run the command `python -m pip install -r requirements.txt` to install
 all required libraries.
 
-To test it out, you can run `python main.py default.yaml` or `python main.py default`.
+To test it out, try `python main.py default` to use the options in /configs/default.yaml.
 Check out the yaml files in /configs for more examples of how it can be configured.
 variable.yaml has some annotations to explain how variable parameters work with animations.
 More formal information is below.
+
+The most important factors for performance are the size of the image (the `pixels` parameter is quadratic),
+the number of frames (linear), and the number of steps (linear).
+All frames are generated simultaneously, but steps are performed sequentially.
+Non-integer values of `power` will run somewhat slower than integers. Variable parameters may also run a bit slower.
 
 ![spiraling tiled fractal](./example_images/julia_default.png)
 
 usage: `python main.py [-h] [--random] [FILE]`
 
 positional arguments:
-  * FILE          optional name of a YAML config file within the /configs folder, e.g. default.yaml. The '.yaml' can be omitted.
+  * FILE          optional; either a path to a YAML config file, or the name of a file within the /configs folder. 
+                  For files within /configs, the extension can be omitted, e.g. `default` or `spires` (with no .yaml).
 
 options:
   * -h, --help    show a help message and exit
   * --random, -r  generate a random config file (with the filename specified by FILE or random.yaml if none)
 
-If no configuration file is provided and --random is not used, it will prompt for a config file. 
+If no configuration file is provided and `--random` is not used, it will prompt for a config file. 
 The config used for a given run will be stored in its output folder, so it can be moved into the configs folder
 to recreate that run if the original config file has changed or no longer exists.
 
@@ -30,11 +36,12 @@ Config parameters:
 
 * Run parameters
   * run_type: String specifying what type of output we're producing. Options:
-    * julia: generate a Julia set
-    * mandelbrot: generate a Mandelbrot-like set. Will ignore the 'param' variable seen below
-    * reanimate: recreate the gif from a folder of .pngs. Does not run any further calculations.
-      Requires folder to be set
-  * folder: a folder for the output. optional except with run_type 'reanimate'
+    * julia: generate a Julia set (ex: default.yaml)
+    * mandelbrot: generate a Mandelbrot-like set (ex: mandelbrot.yaml). Will ignore the 'param' variable seen below
+    * reanimate: recreate the gif from a folder of .pngs (ex: reanimate.yaml) with a specified number of seconds.
+      Requires folder to be set. Ignores all parameters except folder and seconds as it does not generate new images.
+  * folder: path to a folder for the output (or input of 'reanimate' runs).
+            Optional except with run_type 'reanimate'.
 
 * Display parameters
   * pixels: integer by default, fills in values for xpixels and ypixels. Alternative parameters are:
