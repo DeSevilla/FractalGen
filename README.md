@@ -85,9 +85,13 @@ Config parameters:
   * power: float, `p` in the step equation `x^p + c`. Alternative parameters are:
     * power_start: power at the first frame
     * power_end: power at the last frame
-  * param: complex, `c` in the step equation `x^p + c`. Not applicable to Mandelbrot sets
-    Can be set directly, or by alternative parameters:
-    * param_radius: float, distance of param from origin. Available both in fixed and variable modes
-    * param_degrees: float, degrees of param relative to the positive real numbers. Fixed mode only. Alternative parameters are:
-      * param_degrees_start: degrees of param at first frame. Variable mode only
-      * param_degrees_end: degrees of param at last frame. Variable mode only
+  * param: complex, `c` in the Julia set step equation `x^p + c`. Not applicable to Mandelbrot sets.
+    Alternative parameters are:
+    * param_start: value of `c` at the first frame (incompatible with polar coordinates)
+    * param_end: value of `c` at the last frame (incompatible with polar coordinates)
+    * param_radius: float, distance of `c` from the origin for polar coordinates.
+      * param_radius_start: radius at the first frame
+      * param_radius_end: radius at the last frame
+    * param_degrees: float, degrees of `c` relative to the positive real numbers for polar coordinates (90 imaginary, 180 negative, etc.).
+      * param_degrees_start: degrees of `c` at first frame
+      * param_degrees_end: degrees of `c` at last frame

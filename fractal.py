@@ -84,15 +84,15 @@ class Fractal:
         usepow = self.power
         usepar = self.param
         prev = datetime.now()
-        for k in range(n):
-            if log_interval > 0 and k % log_interval == 0:
+        for ii in range(n):
+            if log_interval > 0 and ii % log_interval == 0:
                 cur = datetime.now()
-                print(f'{k}/{n} (took {cur - prev})')
+                print(f'{ii}/{n} (took {cur - prev})')
                 prev = cur
             absarray = np.abs(self.array)
             to_update = absarray < self.valmax
             if arraysteps:
-                to_update = np.logical_and(to_update, steps > k)
+                to_update = np.logical_and(to_update, steps > ii)
             if self.arraypower:
                 usepow = self.power[to_update]
             if self.arrayparam:
@@ -104,15 +104,15 @@ class Fractal:
             self.to_show = self.iterations
 
     def iterate_wrapping(self, n=1, log_interval=-1):
-        for k in range(n):
-            if log_interval > 0 and k % log_interval == 0: 
-                print(f'{k}/{n}') 
+        for ii in range(n):
+            if log_interval > 0 and ii % log_interval == 0: 
+                print(f'{ii}/{n}') 
             self.array **= self.power
             self.array += self.param
             absarray = np.abs(self.array)
             divergent = absarray > self.valmax
             self.array[divergent] = 0
-            self.iterations[divergent] = k + 1
+            self.iterations[divergent] = ii + 1
             self.total_steps += 1
         self.iterations[self.iterations == 0] = self.total_steps
         self.to_show = self.array
@@ -162,8 +162,8 @@ class Fractal:
             folder = 'output'
         images = []
         print(f"Saving image{'s' if self.to_show.shape[0] > 1 else ''}...")
-        for k in range(self.to_show.shape[0]):
-            abs_array = np.abs(self.to_show[k])
+        for ii in range(self.to_show.shape[0]):
+            abs_array = np.abs(self.to_show[ii])
             if abs_array.max() > 0:
                 scaled = abs_array / abs_array.max()
             else:
@@ -174,23 +174,23 @@ class Fractal:
             else:
                 im = Image.fromarray(np.uint8(colormap(scaled) * 255), 'RGBA')
             if self.arrayparam:
-                angle = np.angle(self.param[k][0][0], deg=True)
-                radius = np.abs(self.param[k][0][0])
+                angle = np.angle(self.param[ii][0][0], deg=True)
+                radius = np.abs(self.param[ii][0][0])
             else:
                 radius = np.abs(self.param)
                 angle = np.angle(self.param, deg=True)
             if self.arraypower:
-                power = self.power[k][0][0]
+                power = self.power[ii][0][0]
             else:
                 power = self.power
             angle_str = f'a{angle % 360:.02f}'.replace('.', '_')
             pow_str = f'p{power:.02f}'.replace('.', '_')
             rad_str = f'r{radius:.02f}'.replace('.', '_')
-            filename = f'fractal{k:04}_{pow_str}_{angle_str}_{rad_str}.png'
+            filename = f'fractal{ii:04}_{pow_str}_{angle_str}_{rad_str}.png'
             im.save(relative('output', folder, filename))
             if animate:
                 images.append(im)
-            elif k == 0:
+            elif ii == 0:
                 im.show()
         if animate:
             if len(images) > 1:
@@ -199,8 +199,8 @@ class Fractal:
                 print('Cannot animate as there is only one frame')
 
 def save_gif(images, path, seconds=-1):
-    for i in range(len(images)):
-        images[i] = images[i].convert('P', palette=Image.ADAPTIVE)
+    for ii in range(len(images)):
+        images[ii] = images[ii].convert('P', palette=Image.ADAPTIVE)
     if seconds > 0:
         duration = seconds * 1000 / len(images)
     else:

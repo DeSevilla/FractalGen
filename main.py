@@ -62,8 +62,17 @@ def run_config(cfg: dict):
             has = []
         if no is None:
             no = []
-        return all(map(lambda x: x in coll, has)) and all(map(lambda x: x not in coll, no))
-
+        return (
+            all(map(lambda x: x in coll, has)) and 
+            all(map(lambda x: x not in coll, no))
+        )
+    
+    # def get(param, ii):
+    #     if isinstance(param, np.ndarray):
+    #         return param[ii]
+    #     else:
+    #         return param
+    
     if check(cfg, has=['frames', 'fps'], no=['seconds']):
         frames = cfg.get('frames')
         seconds = cfg.get('fps') * frames
@@ -76,11 +85,11 @@ def run_config(cfg: dict):
     elif check(cfg, has=['frames', 'seconds', 'fps']):
         raise ValueError(f'Config has frames, seconds, and fps. Leave one or more unspecified.')
     else:
-        seconds = cfg.get('seconds', 0)
-        if seconds == 0:
-            frames = 1
+        frames = cfg.get('frames', 1)
+        if frames > 1:
+            seconds = cfg.get('seconds', frames / 24)  # 24 fps default
         else:
-            frames = cfg.get('frames', seconds * 24)
+            seconds = 0
 
     colormap_name = cfg.get('colormap', 'inferno')
     colormap = plt.get_cmap(colormap_name)
@@ -133,8 +142,20 @@ def run_config(cfg: dict):
     else:
         raise ValueError('Config must have either power_start+power_end or power, not both.')
 
-    if check(cfg, has=['param_degrees_start', 'param_degrees_end', 'param_radius'], 
-             no=['param_degrees', 'param', 'param_start', 'param_end']):
+    radius_fixed = ['param_radius']
+    degrees_fixed = ['param_degrees']
+    radius_vary = ['param_radius_start', 'param_radius_end']
+    degrees_vary = ['param_degrees_start', 'param_degrees_end']
+    cart_fixed = ['param']
+    cart_vary = ['param_start', 'param_end']
+    polar = radius_vary + radius_fixed + degrees_fixed + degrees_vary
+    cart = cart_fixed + cart_vary
+    if check(cfg, has=radius_fixed + degrees_fixed, no=degrees_vary + radius_vary + cart):
+        fixed_param = True
+        param_radius = cfg['param_radius']
+        param_degrees = cfg['param_degrees']
+        param = param_radius * pow(np.e, complex(0, (param_degrees / 360) * 2 * np.pi))
+    elif check(cfg, has=radius_fixed + degrees_vary, no=degrees_fixed + radius_vary + cart):
         fixed_param = False
         param_radius = cfg['param_radius']
         param_degrees_start = cfg['param_degrees_start']
@@ -142,33 +163,38 @@ def run_config(cfg: dict):
         arcrange = param_degrees_end - param_degrees_start
         param = np.asarray([param_radius * pow(np.e, complex(0, ((n * arcrange / frames + param_degrees_start) / 360) * 2 * np.pi)) 
                             for n in range(frames)])
-    elif check(cfg, has=['param_start', 'param_end'], 
-               no=['param_radius', 'param_degrees', 'param_degrees_start', 'param_degrees_end', 'param']):
+    elif check(cfg, has=radius_vary + degrees_fixed, no=degrees_vary + radius_fixed + cart):
+        fixed_param = False
+        param_radius_start = cfg['param_radius_start']
+        param_radius_end = cfg['param_radius_end']
+        param_degrees = cfg['param_degrees']
+        angler = pow(np.e, complex(0, param_degrees / 360 * 2 * np.pi))
+        param = np.linspace(param_radius_start * angler, param_radius_end * angler, frames)
+    elif check(cfg, has=radius_vary + degrees_vary, no=degrees_fixed + radius_fixed + cart):
+        fixed_param = False
+        param_radius_start = cfg['param_radius_start']
+        param_radius_end = cfg['param_radius_end']
+        param_radius = np.linspace(param_radius_start, param_radius_end, frames)
+        param_degrees_start = cfg['param_degrees_start']
+        param_degrees_end = cfg['param_degrees_end']
+        arcrange = param_degrees_end - param_degrees_start
+        param = np.asarray([param_radius[n] * pow(np.e, complex(0, ((n * arcrange / frames + param_degrees_start) / 360) * 2 * np.pi)) 
+                            for n in range(frames)])
+    elif check(cfg, has=cart_vary, no=polar + cart_fixed):
         fixed_param = False
         param_start = load_complex(cfg.get('param_start'))
         param_end = load_complex(cfg.get('param_end'))
         param = np.linspace(param_start, param_end, frames)
-    elif check(cfg, has=['param_degrees', 'param_radius'], 
-               no=['param_degrees_start', 'param_degrees_end', 'param', 'param_start', 'param_end']):
-        fixed_param = True
-        param_radius = cfg['param_radius']
-        param_degrees = cfg['param_degrees']
-        param = param_radius * pow(np.e, complex(0, (param_degrees / 360) * 2 * np.pi))
-    elif check(cfg, no=['param_radius', 'param_degrees', 'param_degrees_start', 'param_degrees_end', 'param_start', 'param_end']):
+    elif check(cfg, no=polar + cart_vary):  # doubles as default if no parameter is set
         fixed_param = True
         param = load_complex(cfg.get('param', -0.982+0.232j))
     else:
-        raise ValueError("Incompatible specifications of complex parameter. For a fixed value use param or param_radius+param_degrees. "
-                         "For a varying value use param_start+param_end or param_radius+param_degrees_start+param_degrees_end.")
-    if fixed_param:
-        folder_param = f'{np.abs(param):.3f}r{np.angle(param, deg=True):.02f}d'
-    else:
-        folder_param = f'{param_radius:.3f}r{param_degrees_start:.02f}-{param_degrees_end:.02f}d'
-
+        raise ValueError("Incompatible specifications of complex parameter. For a fixed value use param (complex number) or param_radius+param_degrees (polar coordinates)"
+                         "For a varying value use param_start+param_end (complex numbers), or a combination of param_radius_start+param_radius_end " 
+                         "and/or param_degrees_start+param_degrees_end (polar coordinates).")
     folder = cfg.get('folder', 
                      relative('output', 
-                              start.strftime('%Y%m%d%H%M%S') + 
-                              f' {xpixels}x{ypixels}px {height:.02f}x{width:.02f}w {frames}f {folder_steps}s {folder_param}p'))
+                              start.strftime('%Y%m%d%H%M%S') + '_unknown'))
     os.makedirs(folder, exist_ok=True)
     try:
         # print(power)
